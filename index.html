@@ -1,533 +1,558 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Play, RotateCcw, Home, Sparkles, Heart, Crown, Volume2, Music, Music2 } from 'lucide-react';
-
-// --- [1. 게임 데이터베이스 (아이들 눈높이에 맞춘 쉬운 단어들)] ---
-const DATA_POOL = {
-  level1: [ // 소리와 모양 (의성어/의태어 -> 단어 찾기)
-    { id: '1-1', prompt: "'멍멍' 짖는 동물은?", answer: "강아지", options: ["강아지", "고양이", "병아리"] },
-    { id: '1-2', prompt: "'야옹' 우는 동물은?", answer: "고양이", options: ["고양이", "강아지", "호랑이"] },
-    { id: '1-3', prompt: "'꿀꿀' 소리 내는 동물!", answer: "돼지", options: ["돼지", "소", "말"] },
-    { id: '1-4', prompt: "'깡충깡충' 뛰는 동물?", answer: "토끼", options: ["토끼", "거북이", "사자"] },
-    { id: '1-5', prompt: "'엉금엉금' 기어가는 동물!", answer: "거북이", options: ["거북이", "토끼", "뱀"] },
-    { id: '1-6', prompt: "하늘을 '슈웅' 날아요!", answer: "비행기", options: ["비행기", "자동차", "배"] },
-    { id: '1-7', prompt: "기찻길을 '칙칙폭폭'!", answer: "기차", options: ["기차", "자전거", "버스"] },
-    { id: '1-8', prompt: "'삐뽀삐뽀' 아픈 사람 도와줘요!", answer: "구급차", options: ["구급차", "경찰차", "소방차"] },
-    { id: '1-9', prompt: "'애앵애앵' 불을 꺼줘요!", answer: "소방차", options: ["소방차", "구급차", "택시"] },
-    { id: '1-10', prompt: "맛있는 '빨간색' 과일!", answer: "사과", options: ["사과", "바나나", "포도"] },
-    { id: '1-11', prompt: "길쭉길쭉 '노란색' 과일!", answer: "바나나", options: ["바나나", "사과", "수박"] },
-    { id: '1-12', prompt: "비가 올 때 '활짝' 펼쳐요!", answer: "우산", options: ["우산", "모자", "가방"] },
-    { id: '1-13', prompt: "발에 '쏙' 신어요!", answer: "신발", options: ["신발", "장갑", "모자"] },
-    { id: '1-14', prompt: "머리에 '폭' 써요!", answer: "모자", options: ["모자", "양말", "바지"] },
-    { id: '1-15', prompt: "손을 '뽀득뽀득' 씻어요!", answer: "비누", options: ["비누", "치약", "샴푸"] },
-    { id: '1-16', prompt: "이를 '치카치카' 닦아요!", answer: "칫솔", options: ["칫솔", "비누", "수건"] },
-    { id: '1-17', prompt: "밤에 '쿨쿨' 자요!", answer: "침대", options: ["침대", "책상", "의자"] },
-    { id: '1-18', prompt: "책을 '반듯하게' 펴요!", answer: "책상", options: ["책상", "침대", "냉장고"] },
-    { id: '1-19', prompt: "텔레비전을 보는 곳!", answer: "거실", options: ["거실", "부엌", "화장실"] },
-    { id: '1-20', prompt: "음식을 '보글보글' 요리해요!", answer: "부엌", options: ["부엌", "안방", "현관"] },
-  ],
-  level2: [ // 반대말 (직관적인 것 위주)
-    { id: '2-1', prompt: "아이스크림은 '차갑다'! 반대는?", answer: "뜨겁다", options: ["뜨겁다", "작다", "멀다"] },
-    { id: '2-2', prompt: "코끼리는 '크다'! 반대는?", answer: "작다", options: ["많다", "작다", "높다"] },
-    { id: '2-3', prompt: "기차는 '길다'! 반대는?", answer: "짧다", options: ["넓다", "짧다", "무겁다"] },
-    { id: '2-4', prompt: "사탕이 '많다'! 반대는?", answer: "적다", options: ["적다", "크다", "높다"] },
-    { id: '2-5', prompt: "비행기는 '높다'! 반대는?", answer: "낮다", options: ["깊다", "낮다", "멀다"] },
-    { id: '2-6', prompt: "거북이는 '느리다'! 반대는?", answer: "빠르다", options: ["빠르다", "약하다", "순하다"] },
-    { id: '2-7', prompt: "깃털은 '가볍다'! 반대는?", answer: "무겁다", options: ["무겁다", "어둡다", "즐겁다"] },
-    { id: '2-8', prompt: "밤은 '어둡다'! 반대는?", answer: "밝다", options: ["밝다", "검다", "붉다"] },
-    { id: '2-9', prompt: "돌멩이는 '딱딱하다'! 반대는?", answer: "말랑하다", options: ["말랑하다", "단단하다", "뾰족하다"] },
-    { id: '2-10', prompt: "선물 받아서 '기쁘다'! 반대는?", answer: "슬프다", options: ["화나다", "슬프다", "졸리다"] },
-    { id: '2-11', prompt: "겨울은 '춥다'! 반대는?", answer: "덥다", options: ["덥다", "시원하다", "따뜻하다"] },
-    { id: '2-12', prompt: "손이 '깨끗하다'! 반대는?", answer: "더럽다", options: ["더럽다", "맑다", "예쁘다"] },
-    { id: '2-13', prompt: "이 문제는 '쉽다'! 반대는?", answer: "어렵다", options: ["어렵다", "재밌다", "지루하다"] },
-    { id: '2-14', prompt: "'앞'으로 가자! 반대는?", answer: "뒤", options: ["옆", "위", "뒤"] },
-    { id: '2-15', prompt: "'위'를 봐! 반대는?", answer: "아래", options: ["아래", "사이", "가운데"] },
-    { id: '2-16', prompt: "집 '안'에 있어! 반대는?", answer: "밖", options: ["밖", "속", "겉"] },
-    { id: '2-17', prompt: "학교에 '가다'! 반대는?", answer: "오다", options: ["오다", "자다", "놀다"] },
-    { id: '2-18', prompt: "자리에 '서다'! 반대는?", answer: "앉다", options: ["앉다", "눕다", "걷다"] },
-    { id: '2-19', prompt: "문을 '열다'! 반대는?", answer: "닫다", options: ["닫다", "깨다", "밀다"] },
-    { id: '2-20', prompt: "장난감을 '밀다'! 반대는?", answer: "당기다", options: ["잡다", "놓다", "당기다"] },
-  ],
-  level3: [ // 문장 완성 (주어와 서술어)
-    { id: '3-1', prompt: "'나비가' 팔랑팔랑~", answer: "날아요", options: ["날아요", "헤엄쳐요", "굴러가요"] },
-    { id: '3-2', prompt: "'물고기가' 물속에서~", answer: "헤엄쳐요", options: ["걸어요", "헤엄쳐요", "날아요"] },
-    { id: '3-3', prompt: "'아기가' 응애응애!", answer: "울어요", options: ["울어요", "웃어요", "자요"] },
-    { id: '3-4', prompt: "'새가' 짹짹짹!", answer: "노래해요", options: ["기어요", "노래해요", "뛰어요"] },
-    { id: '3-5', prompt: "'개구리가' 폴짝!", answer: "뛰어요", options: ["자요", "뛰어요", "먹어요"] },
-    { id: '3-6', prompt: "'바람이' 쌩쌩~", answer: "불어요", options: ["불어요", "멈춰요", "사라져요"] },
-    { id: '3-7', prompt: "'꽃이' 예쁘게~", answer: "피어요", options: ["져요", "피어요", "죽어요"] },
-    { id: '3-8', prompt: "'비가' 주룩주룩~", answer: "내려요", options: ["올라가요", "내려요", "돌아요"] },
-    { id: '3-9', prompt: "'해가' 아침에~", answer: "떴어요", options: ["졌어요", "떴어요", "숨었어요"] },
-    { id: '3-10', prompt: "'사과를' 냠냠!", answer: "먹어요", options: ["먹어요", "마셔요", "입어요"] },
-    { id: '3-11', prompt: "'우유를' 꿀꺽꿀꺽!", answer: "마셔요", options: ["씹어요", "마셔요", "던져요"] },
-    { id: '3-12', prompt: "'공을' 뻥!", answer: "차요", options: ["차요", "먹어요", "입어요"] },
-    { id: '3-13', prompt: "'그림을' 쓱쓱!", answer: "그려요", options: ["지워요", "그려요", "부숴요"] },
-    { id: '3-14', prompt: "'노래를' 랄랄라~", answer: "불러요", options: ["들어요", "불러요", "봐요"] },
-    { id: '3-15', prompt: "'책을' 재미있게~", answer: "읽어요", options: ["읽어요", "찢어요", "덮어요"] },
-    { id: '3-16', prompt: "'옷을' 예쁘게~", answer: "입어요", options: ["벗어요", "입어요", "접어요"] },
-    { id: '3-17', prompt: "'신발을' 신고~", answer: "신어요", options: ["신어요", "써요", "껴요"] },
-    { id: '3-18', prompt: "'잠을' 쿨쿨~", answer: "자요", options: ["자요", "깨요", "놀아요"] },
-    { id: '3-19', prompt: "'친구와' 사이좋게~", answer: "놀아요", options: ["놀아요", "싸워요", "밀어요"] },
-    { id: '3-20', prompt: "'전화를' 여보세요?", answer: "받아요", options: ["받아요", "걸어요", "끊어요"] },
-  ]
-};
-
-// 냠냠이의 성장 단계별 스타일 정의
-const MONSTER_STYLES = {
-  1: { size: 'w-32 h-32', color: 'bg-green-300', eye: 'w-4 h-4', label: '아기 냠냠이' },
-  2: { size: 'w-48 h-48', color: 'bg-blue-400', eye: 'w-6 h-6', label: '어린이 냠냠이' },
-  3: { size: 'w-64 h-64', color: 'bg-purple-500', eye: 'w-8 h-8', label: '어른 냠냠이' }
-};
-
-// 배열 섞기 함수
-const shuffleArray = (array) => {
-  const newArray = [...array];
-  for (let i = newArray.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
-  }
-  return newArray;
-};
-
-const shuffleOptions = (question) => {
-  return {
-    ...question,
-    options: shuffleArray(question.options)
-  };
-};
-
-export default function WordTamagotchi() {
-  const [gameState, setGameState] = useState('menu'); // 'menu', 'levelSelect', 'playing', 'clear'
-  const [gameQuestions, setGameQuestions] = useState([]);
-  const [currentIdx, setCurrentIdx] = useState(0);
-  
-  // 다마고치 상태
-  const [level, setLevel] = useState(1);
-  const [exp, setExp] = useState(0); 
-  const maxExpPerLevel = 20; 
-
-  const [monsterState, setMonsterState] = useState('idle'); 
-  const [swallowedWord, setSwallowedWord] = useState('');
-  const [wrongWord, setWrongWord] = useState(null);
-  
-  // 배경음악 상태
-  const [isMusicPlaying, setIsMusicPlaying] = useState(false);
-  const audioRef = useRef(null);
-
-  // --- [음악 플레이어 설정] ---
-  useEffect(() => {
-    // Audio 객체 생성
-    // public/music/bgm.mp3 경로에 파일이 있어야 재생됩니다.
-    audioRef.current = new Audio('music/bgm.mp3'); 
-    audioRef.current.loop = true; // 반복 재생
-    audioRef.current.volume = 0.3; // 배경음악이니 볼륨을 작게
-
-    // cleanup
-    return () => {
-      if (audioRef.current) {
-        audioRef.current.pause();
-        audioRef.current = null;
-      }
-    };
-  }, []);
-
-  const toggleMusic = () => {
-    if (!audioRef.current) return;
-
-    if (isMusicPlaying) {
-      audioRef.current.pause();
-    } else {
-      // 브라우저 정책상 사용자 상호작용 후 재생 가능
-      audioRef.current.play().catch(e => console.log("Music play failed (file might be missing):", e));
-    }
-    setIsMusicPlaying(!isMusicPlaying);
-  };
-
-  // --- [게임 로직] ---
-  
-  const prepareGameData = (startLevel) => {
-    // 선택한 레벨부터 시작하여 섞어서 준비
-    let questions = [];
-    if (startLevel === 1) {
-        questions = [...shuffleArray(DATA_POOL.level1), ...shuffleArray(DATA_POOL.level2), ...shuffleArray(DATA_POOL.level3)];
-    } else if (startLevel === 2) {
-        questions = [...shuffleArray(DATA_POOL.level2), ...shuffleArray(DATA_POOL.level3)];
-    } else {
-        questions = [...shuffleArray(DATA_POOL.level3)];
-    }
-    return questions.map(shuffleOptions);
-  };
-
-  const speakWord = useCallback((text) => {
-    if ('speechSynthesis' in window) {
-      window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.lang = 'ko-KR';
-      utterance.rate = 0.85; // 아이들을 위해 조금 더 천천히
-      utterance.pitch = level === 1 ? 1.4 : (level === 2 ? 1.1 : 0.9);
-      window.speechSynthesis.speak(utterance);
-    }
-  }, [level]);
-
-  const playSound = useCallback((type) => {
-    try {
-      const ctx = new (window.AudioContext || window.webkitAudioContext)();
-      const osc = ctx.createOscillator();
-      const gainNode = ctx.createGain();
-      osc.connect(gainNode);
-      gainNode.connect(ctx.destination);
-      
-      if (type === 'eat') {
-        osc.type = 'triangle';
-        osc.frequency.setValueAtTime(400, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
-        gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.1);
-      } else if (type === 'happy') {
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, ctx.currentTime);
-        osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
-        gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.3);
-      } else if (type === 'levelup') {
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(440, ctx.currentTime);
-        osc.frequency.setValueAtTime(554, ctx.currentTime + 0.1);
-        osc.frequency.setValueAtTime(659, ctx.currentTime + 0.2);
-        osc.frequency.setValueAtTime(880, ctx.currentTime + 0.3);
-        gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.6);
-      }
-    } catch (e) {
-      console.log("Audio API not supported");
-    }
-  }, []);
-
-  const startGame = (startLevel) => {
-    const questions = prepareGameData(startLevel);
-    setGameQuestions(questions);
-    setCurrentIdx(0);
-    setLevel(startLevel);
-    setExp(0);
-    setMonsterState('idle');
-    setGameState('playing');
-  };
-
-  const handleFeed = (selectedWord) => {
-    if (monsterState !== 'idle' && monsterState !== 'sad') return;
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>글자 슬라임 냠냠이 키우기</title>
     
-    speakWord(selectedWord);
-    const currentData = gameQuestions[currentIdx];
+    <!-- 1. Tailwind CSS (스타일링) -->
+    <script src="https://cdn.tailwindcss.com"></script>
     
-    if (selectedWord === currentData.answer) {
-      setMonsterState('eating');
-      setSwallowedWord(selectedWord);
-      playSound('eat');
-      
-      setTimeout(() => {
-        setMonsterState('happy');
-        playSound('happy');
-        setSwallowedWord('');
-        
-        const newExp = exp + 1;
-        setExp(newExp);
-
-        setTimeout(() => {
-          if (newExp >= maxExpPerLevel) {
-            handleLevelUp();
-          } else {
-            nextQuestion();
-          }
-        }, 1500);
-
-      }, 600); 
-
-    } else {
-      setMonsterState('sad');
-      setWrongWord(selectedWord);
-      setTimeout(() => {
-        setMonsterState('idle');
-        setWrongWord(null);
-      }, 800);
-    }
-  };
-
-  const handleLevelUp = () => {
-    if (level === 3) {
-      setGameState('clear');
-      speakWord("축하해요! 냠냠이가 왕관을 썼어요!");
-      return;
-    }
+    <!-- 2. React & ReactDOM (리액트 코어) -->
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
     
-    setMonsterState('levelup');
-    playSound('levelup');
-    speakWord(level === 1 ? "냠냠이가 어린이가 되었어요!" : "와아! 냠냠이가 다 컸어요!");
-    
-    setTimeout(() => {
-      setLevel(prev => prev + 1);
-      setExp(0);
-      setMonsterState('idle');
-      nextQuestion(true);
-    }, 2500);
-  };
+    <!-- 3. Babel (JSX 코드를 브라우저가 이해하는 자바스크립트로 변환) -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 
-  const nextQuestion = (isAfterLevelUp = false) => {
-    const nextIdx = currentIdx + 1;
-    if (nextIdx < gameQuestions.length) {
-      setCurrentIdx(nextIdx);
-      setMonsterState('idle');
-    }
-  };
-
-  // --- [렌더링] ---
-  if (gameState === 'menu') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-green-50 font-sans p-6 rounded-2xl relative">
-        {/* 음악 토글 버튼 */}
-        <button 
-          onClick={toggleMusic}
-          className="absolute top-6 right-6 p-3 bg-white rounded-full shadow-md hover:bg-gray-100 transition-all"
-        >
-          {isMusicPlaying ? <Music className="text-green-500" /> : <Music2 className="text-gray-400" />}
-        </button>
-
-        <div className="w-32 h-32 bg-green-300 rounded-full flex flex-col items-center justify-center mb-6 animate-bounce shadow-lg">
-          <div className="flex space-x-3 mb-2"><div className="w-4 h-4 bg-gray-800 rounded-full"></div><div className="w-4 h-4 bg-gray-800 rounded-full"></div></div>
-          <div className="w-10 h-4 bg-gray-800 rounded-b-full"></div>
-        </div>
-        <h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 mb-4 tracking-tight">글자 괴물 <span className="text-green-500">냠냠이</span></h1>
-        <p className="text-lg text-gray-600 mb-10 font-medium">단어를 먹고 무럭무럭 자라나요!</p>
-        
-        <button 
-          onClick={() => setGameState('levelSelect')}
-          className="px-10 py-5 bg-green-500 text-white rounded-full font-bold text-2xl hover:bg-green-600 transition-all shadow-xl active:scale-95 flex items-center space-x-2"
-        >
-          <Play fill="currentColor" />
-          <span>게임 시작</span>
-        </button>
-      </div>
-    );
-  }
-
-  if (gameState === 'levelSelect') {
-    return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-sky-50 font-sans p-6 rounded-2xl">
-            <h2 className="text-3xl font-extrabold text-gray-800 mb-8">어떤 냠냠이를 키울까요?</h2>
-            
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
-                <button 
-                    onClick={() => startGame(1)}
-                    className="flex flex-col items-center p-6 bg-white rounded-3xl border-4 border-green-200 hover:border-green-400 hover:bg-green-50 transition-all shadow-md active:scale-95"
-                >
-                    <div className="w-20 h-20 bg-green-300 rounded-full mb-4 shadow-sm" />
-                    <span className="text-xl font-bold text-gray-700">1단계: 소리와 단어</span>
-                    <span className="text-sm text-gray-500 mt-2">"멍멍" → 강아지</span>
-                </button>
-
-                <button 
-                    onClick={() => startGame(2)}
-                    className="flex flex-col items-center p-6 bg-white rounded-3xl border-4 border-blue-200 hover:border-blue-400 hover:bg-blue-50 transition-all shadow-md active:scale-95"
-                >
-                    <div className="w-24 h-24 bg-blue-400 rounded-full mb-4 shadow-sm" />
-                    <span className="text-xl font-bold text-gray-700">2단계: 반대말</span>
-                    <span className="text-sm text-gray-500 mt-2">"크다" → 작다</span>
-                </button>
-
-                <button 
-                    onClick={() => startGame(3)}
-                    className="flex flex-col items-center p-6 bg-white rounded-3xl border-4 border-purple-200 hover:border-purple-400 hover:bg-purple-50 transition-all shadow-md active:scale-95"
-                >
-                    <div className="w-28 h-28 bg-purple-500 rounded-full mb-4 shadow-sm" />
-                    <span className="text-xl font-bold text-gray-700">3단계: 문장 완성</span>
-                    <span className="text-sm text-gray-500 mt-2">"나비가" → 날아요</span>
-                </button>
-            </div>
-
-            <button onClick={() => setGameState('menu')} className="mt-10 px-6 py-2 bg-gray-200 rounded-full text-gray-600 font-bold hover:bg-gray-300">
-                뒤로 가기
-            </button>
-        </div>
-    );
-  }
-
-  if (gameState === 'clear') {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-purple-50 font-sans p-6 rounded-2xl text-center">
-        <Sparkles className="text-purple-400 w-16 h-16 mb-6 animate-spin-slow" />
-        
-        <div className={`${MONSTER_STYLES[3].size} ${MONSTER_STYLES[3].color} rounded-full flex flex-col items-center justify-center mb-8 shadow-2xl animate-bounce relative`}>
-          <div className="absolute -top-12 animate-pulse">
-            <Crown size={64} className="text-yellow-400 fill-yellow-400 drop-shadow-lg" />
-          </div>
-          <div className="flex space-x-6 mb-4"><div className={`${MONSTER_STYLES[3].eye} bg-gray-800 rounded-full`}></div><div className={`${MONSTER_STYLES[3].eye} bg-gray-800 rounded-full`}></div></div>
-          <div className="w-24 h-12 bg-gray-800 rounded-b-full relative overflow-hidden"><div className="absolute bottom-0 w-full h-4 bg-red-400"></div></div>
-        </div>
-        
-        <h2 className="text-4xl md:text-5xl font-extrabold text-purple-600 mb-6">냠냠이 왕이 되었어요!</h2>
-        <p className="text-xl text-gray-500 mb-8 font-bold">참 잘했어요! 멋진 단어 마법사님!</p>
-        <button 
-          onClick={() => setGameState('menu')}
-          className="flex items-center space-x-2 px-8 py-4 bg-gray-800 text-white rounded-full font-bold text-xl hover:bg-gray-700 transition-colors shadow-lg active:scale-95"
-        >
-          <RotateCcw size={24} />
-          <span>다시 키우기</span>
-        </button>
-      </div>
-    );
-  }
-
-  const currentData = gameQuestions[currentIdx];
-  const style = MONSTER_STYLES[level];
-  const progressPercent = (exp / maxExpPerLevel) * 100;
-
-  return (
-    <div className="flex flex-col min-h-screen bg-amber-50 font-sans p-4 rounded-2xl relative overflow-hidden">
-      
-      <style dangerouslySetInnerHTML={{__html: `
+    <style>
+        /* 커스텀 애니메이션 정의 */
         @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25% { transform: translateX(-15px) rotate(-10deg); }
-          75% { transform: translateX(15px) rotate(10deg); }
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-15px) rotate(-10deg); }
+            75% { transform: translateX(15px) rotate(10deg); }
         }
         .animate-shake { animation: shake 0.5s ease-in-out; }
         
         @keyframes chomp {
-          0% { transform: scaleY(1); }
-          50% { transform: scaleY(0.2); }
-          100% { transform: scaleY(1); }
+            0% { transform: scaleY(1); }
+            50% { transform: scaleY(0.2); }
+            100% { transform: scaleY(1); }
         }
         .animate-chomp { animation: chomp 0.3s ease-in-out infinite; }
 
         @keyframes levelUpGlow {
-          0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); transform: scale(1); }
-          50% { box-shadow: 0 0 50px 20px rgba(255, 255, 255, 0.9); transform: scale(1.2) rotate(360deg); }
-          100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); transform: scale(1); }
+            0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); transform: scale(1); }
+            50% { box-shadow: 0 0 50px 20px rgba(255, 255, 255, 0.9); transform: scale(1.2) rotate(360deg); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); transform: scale(1); }
         }
         .animate-levelup { animation: levelUpGlow 2s ease-in-out; }
-      `}} />
+    </style>
+</head>
+<body class="bg-amber-50">
+    <div id="root"></div>
 
-      {/* 상단 UI */}
-      <div className="flex justify-between items-center bg-white p-4 rounded-3xl shadow-sm z-10">
-        <div className="flex flex-col w-full mr-4">
-          <div className="flex justify-between items-end mb-1">
-            <span className="text-sm font-bold text-gray-500">{style.label} (Lv.{level})</span>
-            <span className="text-xs font-bold text-gray-400">{exp} / {maxExpPerLevel}</span>
-          </div>
-          <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
-            <div 
-              className="h-full bg-green-400 transition-all duration-500 ease-out"
-              style={{ width: `${progressPercent}%` }}
-            />
-          </div>
-        </div>
-        <button onClick={() => setGameState('menu')} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 flex-shrink-0">
-          <Home className="text-gray-600" size={24} />
-        </button>
-      </div>
+    <!-- 리액트 코드 시작 -->
+    <script type="text/babel">
+        const { useState, useEffect, useCallback, useRef } = React;
 
-      {/* 메인 게임 영역 */}
-      <div className="flex-1 flex flex-col items-center justify-center w-full relative">
-        
-        {/* 말풍선 */}
-        <div 
-          onClick={() => speakWord(currentData.prompt)}
-          className={`
-            cursor-pointer active:scale-95
-            mb-8 bg-white px-6 py-4 rounded-3xl rounded-br-none shadow-md border-2 border-gray-100 
-            transition-all duration-300 hover:border-green-300 hover:shadow-lg group
-            ${monsterState === 'levelup' ? 'opacity-0' : 'opacity-100'}
-          `}
-        >
-          <div className="flex items-center justify-center space-x-2">
-            <p className="text-2xl md:text-3xl font-bold text-gray-800 text-center break-keep">
-              {monsterState === 'happy' ? "우와! 꿀맛이야!" : currentData.prompt}
-            </p>
-            {monsterState !== 'happy' && (
-              <Volume2 className="text-gray-400 group-hover:text-green-500 transition-colors" size={24} />
-            )}
-          </div>
-        </div>
+        // --- 아이콘 컴포넌트 (Lucide 대체용 SVG) ---
+        const IconBase = ({ d, className, fill = "none" }) => (
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={fill} stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+                {d}
+            </svg>
+        );
 
-        {/* 냠냠이 캐릭터 */}
-        <div className={`
-          relative transition-all duration-700 ease-in-out rounded-full flex flex-col items-center justify-center shadow-xl
-          ${style.size} ${style.color}
-          ${monsterState === 'sad' ? 'animate-shake bg-gray-400' : ''}
-          ${monsterState === 'happy' ? 'animate-bounce' : ''}
-          ${monsterState === 'levelup' ? 'animate-levelup bg-yellow-300' : ''}
-        `}>
-          {level === 3 && monsterState === 'happy' && (
-            <div className="absolute -top-10 animate-bounce transition-opacity duration-500">
-               <Crown size={48} className="text-yellow-400 fill-yellow-400 drop-shadow-md" />
-            </div>
-          )}
+        const Play = (props) => <IconBase {...props} d={<polygon points="5 3 19 12 5 21 5 3" />} fill="currentColor" />;
+        const Home = (props) => <IconBase {...props} d={<><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></>} />;
+        const RotateCcw = (props) => <IconBase {...props} d={<><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></>} />;
+        const Sparkles = (props) => <IconBase {...props} d={<><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L21 12l-5.813-1.912a2 2 0 0 1-1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M2 7h4"/><path d="M2 11h4"/></>} />;
+        const Heart = (props) => <IconBase {...props} d={<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />} />;
+        const Crown = (props) => <IconBase {...props} d={<path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" />} />;
+        const Volume2 = (props) => <IconBase {...props} d={<><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /></>} />;
+        const Music = (props) => <IconBase {...props} d={<path d="M9 18V5l12-2v13" />} />;
+        const Music2 = (props) => <IconBase {...props} d={<><circle cx="8" cy="18" r="4"/><path d="M12 18V2l7 4"/></>} />;
 
-          <div className={`flex transition-all duration-300 ${level === 1 ? 'space-x-3' : level === 2 ? 'space-x-5' : 'space-x-8'} mb-2`}>
-            {monsterState === 'happy' ? (
-              <>
-                <div className="text-gray-800 font-bold text-2xl md:text-4xl">^</div>
-                <div className="text-gray-800 font-bold text-2xl md:text-4xl">^</div>
-              </>
-            ) : monsterState === 'sad' ? (
-              <>
-                <div className="text-gray-800 font-bold text-2xl md:text-4xl">{'>'}</div>
-                <div className="text-gray-800 font-bold text-2xl md:text-4xl">{'<'}</div>
-              </>
-            ) : (
-              <>
-                <div className={`${style.eye} bg-gray-800 rounded-full`}></div>
-                <div className={`${style.eye} bg-gray-800 rounded-full`}></div>
-              </>
-            )}
-          </div>
 
-          <div className={`
-            bg-gray-800 transition-all duration-300 flex items-center justify-center overflow-hidden relative
-            ${monsterState === 'idle' ? 'w-1/3 h-2 rounded-full mt-2' : ''}
-            ${monsterState === 'eating' ? 'w-1/2 h-1/2 rounded-full animate-chomp' : ''}
-            ${monsterState === 'happy' ? 'w-1/2 h-1/3 rounded-b-full mt-1' : ''}
-            ${monsterState === 'sad' ? 'w-1/3 h-2 rounded-t-full mt-4' : ''}
-            ${monsterState === 'levelup' ? 'w-1/2 h-1/3 rounded-b-full mt-1' : ''}
-          `}>
-            {monsterState === 'eating' && swallowedWord && (
-              <span className="text-white font-bold text-xl md:text-3xl absolute animate-ping">{swallowedWord}</span>
-            )}
-            {(monsterState === 'happy' || monsterState === 'levelup') && (
-              <div className="absolute bottom-0 w-3/4 h-1/2 bg-red-400 rounded-t-full"></div>
-            )}
-          </div>
+        // --- [1. 게임 데이터베이스] ---
+        const DATA_POOL = {
+          level1: [ 
+            { id: '1-1', prompt: "'멍멍' 짖는 동물은?", answer: "강아지", options: ["강아지", "고양이", "병아리"] },
+            { id: '1-2', prompt: "'야옹' 우는 동물은?", answer: "고양이", options: ["고양이", "강아지", "호랑이"] },
+            { id: '1-3', prompt: "'꿀꿀' 소리 내는 동물!", answer: "돼지", options: ["돼지", "소", "말"] },
+            { id: '1-4', prompt: "'깡충깡충' 뛰는 동물?", answer: "토끼", options: ["토끼", "거북이", "사자"] },
+            { id: '1-5', prompt: "'엉금엉금' 기어가는 동물!", answer: "거북이", options: ["거북이", "토끼", "뱀"] },
+            { id: '1-6', prompt: "하늘을 '슈웅' 날아요!", answer: "비행기", options: ["비행기", "자동차", "배"] },
+            { id: '1-7', prompt: "기찻길을 '칙칙폭폭'!", answer: "기차", options: ["기차", "자전거", "버스"] },
+            { id: '1-8', prompt: "'삐뽀삐뽀' 아픈 사람 도와줘요!", answer: "구급차", options: ["구급차", "경찰차", "소방차"] },
+            { id: '1-9', prompt: "'애앵애앵' 불을 꺼줘요!", answer: "소방차", options: ["소방차", "구급차", "택시"] },
+            { id: '1-10', prompt: "맛있는 '빨간색' 과일!", answer: "사과", options: ["사과", "바나나", "포도"] },
+            { id: '1-11', prompt: "길쭉길쭉 '노란색' 과일!", answer: "바나나", options: ["바나나", "사과", "수박"] },
+            { id: '1-12', prompt: "비가 올 때 '활짝' 펼쳐요!", answer: "우산", options: ["우산", "모자", "가방"] },
+            { id: '1-13', prompt: "발에 '쏙' 신어요!", answer: "신발", options: ["신발", "장갑", "모자"] },
+            { id: '1-14', prompt: "머리에 '폭' 써요!", answer: "모자", options: ["모자", "양말", "바지"] },
+            { id: '1-15', prompt: "손을 '뽀득뽀득' 씻어요!", answer: "비누", options: ["비누", "치약", "샴푸"] },
+            { id: '1-16', prompt: "이를 '치카치카' 닦아요!", answer: "칫솔", options: ["칫솔", "비누", "수건"] },
+            { id: '1-17', prompt: "밤에 '쿨쿨' 자요!", answer: "침대", options: ["침대", "책상", "의자"] },
+            { id: '1-18', prompt: "책을 '반듯하게' 펴요!", answer: "책상", options: ["책상", "침대", "냉장고"] },
+            { id: '1-19', prompt: "텔레비전을 보는 곳!", answer: "거실", options: ["거실", "부엌", "화장실"] },
+            { id: '1-20', prompt: "음식을 '보글보글' 요리해요!", answer: "부엌", options: ["부엌", "안방", "현관"] },
+          ],
+          level2: [ 
+            { id: '2-1', prompt: "아이스크림은 '차갑다'! 반대는?", answer: "뜨겁다", options: ["뜨겁다", "작다", "멀다"] },
+            { id: '2-2', prompt: "코끼리는 '크다'! 반대는?", answer: "작다", options: ["많다", "작다", "높다"] },
+            { id: '2-3', prompt: "기차는 '길다'! 반대는?", answer: "짧다", options: ["넓다", "짧다", "무겁다"] },
+            { id: '2-4', prompt: "사탕이 '많다'! 반대는?", answer: "적다", options: ["적다", "크다", "높다"] },
+            { id: '2-5', prompt: "비행기는 '높다'! 반대는?", answer: "낮다", options: ["깊다", "낮다", "멀다"] },
+            { id: '2-6', prompt: "거북이는 '느리다'! 반대는?", answer: "빠르다", options: ["빠르다", "약하다", "순하다"] },
+            { id: '2-7', prompt: "깃털은 '가볍다'! 반대는?", answer: "무겁다", options: ["무겁다", "어둡다", "즐겁다"] },
+            { id: '2-8', prompt: "밤은 '어둡다'! 반대는?", answer: "밝다", options: ["밝다", "검다", "붉다"] },
+            { id: '2-9', prompt: "돌멩이는 '딱딱하다'! 반대는?", answer: "말랑하다", options: ["말랑하다", "단단하다", "뾰족하다"] },
+            { id: '2-10', prompt: "선물 받아서 '기쁘다'! 반대는?", answer: "슬프다", options: ["화나다", "슬프다", "졸리다"] },
+            { id: '2-11', prompt: "겨울은 '춥다'! 반대는?", answer: "덥다", options: ["덥다", "시원하다", "따뜻하다"] },
+            { id: '2-12', prompt: "손이 '깨끗하다'! 반대는?", answer: "더럽다", options: ["더럽다", "맑다", "예쁘다"] },
+            { id: '2-13', prompt: "이 문제는 '쉽다'! 반대는?", answer: "어렵다", options: ["어렵다", "재밌다", "지루하다"] },
+            { id: '2-14', prompt: "'앞'으로 가자! 반대는?", answer: "뒤", options: ["옆", "위", "뒤"] },
+            { id: '2-15', prompt: "'위'를 봐! 반대는?", answer: "아래", options: ["아래", "사이", "가운데"] },
+            { id: '2-16', prompt: "집 '안'에 있어! 반대는?", answer: "밖", options: ["밖", "속", "겉"] },
+            { id: '2-17', prompt: "학교에 '가다'! 반대는?", answer: "오다", options: ["오다", "자다", "놀다"] },
+            { id: '2-18', prompt: "자리에 '서다'! 반대는?", answer: "앉다", options: ["앉다", "눕다", "걷다"] },
+            { id: '2-19', prompt: "문을 '열다'! 반대는?", answer: "닫다", options: ["닫다", "깨다", "밀다"] },
+            { id: '2-20', prompt: "장난감을 '밀다'! 반대는?", answer: "당기다", options: ["잡다", "놓다", "당기다"] },
+          ],
+          level3: [ 
+            { id: '3-1', prompt: "'나비가' 팔랑팔랑~", answer: "날아요", options: ["날아요", "헤엄쳐요", "굴러가요"] },
+            { id: '3-2', prompt: "'물고기가' 물속에서~", answer: "헤엄쳐요", options: ["걸어요", "헤엄쳐요", "날아요"] },
+            { id: '3-3', prompt: "'아기가' 응애응애!", answer: "울어요", options: ["울어요", "웃어요", "자요"] },
+            { id: '3-4', prompt: "'새가' 짹짹짹!", answer: "노래해요", options: ["기어요", "노래해요", "뛰어요"] },
+            { id: '3-5', prompt: "'개구리가' 폴짝!", answer: "뛰어요", options: ["자요", "뛰어요", "먹어요"] },
+            { id: '3-6', prompt: "'바람이' 쌩쌩~", answer: "불어요", options: ["불어요", "멈춰요", "사라져요"] },
+            { id: '3-7', prompt: "'꽃이' 예쁘게~", answer: "피어요", options: ["져요", "피어요", "죽어요"] },
+            { id: '3-8', prompt: "'비가' 주룩주룩~", answer: "내려요", options: ["올라가요", "내려요", "돌아요"] },
+            { id: '3-9', prompt: "'해가' 아침에~", answer: "떴어요", options: ["졌어요", "떴어요", "숨었어요"] },
+            { id: '3-10', prompt: "'사과를' 냠냠!", answer: "먹어요", options: ["먹어요", "마셔요", "입어요"] },
+            { id: '3-11', prompt: "'우유를' 꿀꺽꿀꺽!", answer: "마셔요", options: ["씹어요", "마셔요", "던져요"] },
+            { id: '3-12', prompt: "'공을' 뻥!", answer: "차요", options: ["차요", "먹어요", "입어요"] },
+            { id: '3-13', prompt: "'그림을' 쓱쓱!", answer: "그려요", options: ["지워요", "그려요", "부숴요"] },
+            { id: '3-14', prompt: "'노래를' 랄랄라~", answer: "불러요", options: ["들어요", "불러요", "봐요"] },
+            { id: '3-15', prompt: "'책을' 재미있게~", answer: "읽어요", options: ["읽어요", "찢어요", "덮어요"] },
+            { id: '3-16', prompt: "'옷을' 예쁘게~", answer: "입어요", options: ["벗어요", "입어요", "접어요"] },
+            { id: '3-17', prompt: "'신발을' 신고~", answer: "신어요", options: ["신어요", "써요", "껴요"] },
+            { id: '3-18', prompt: "'잠을' 쿨쿨~", answer: "자요", options: ["자요", "깨요", "놀아요"] },
+            { id: '3-19', prompt: "'친구와' 사이좋게~", answer: "놀아요", options: ["놀아요", "싸워요", "밀어요"] },
+            { id: '3-20', prompt: "'전화를' 여보세요?", answer: "받아요", options: ["받아요", "걸어요", "끊어요"] },
+          ]
+        };
+
+        const MONSTER_STYLES = {
+          1: { size: 'w-32 h-32', color: 'bg-green-300', eye: 'w-4 h-4', label: '아기 냠냠이' },
+          2: { size: 'w-48 h-48', color: 'bg-blue-400', eye: 'w-6 h-6', label: '어린이 냠냠이' },
+          3: { size: 'w-64 h-64', color: 'bg-purple-500', eye: 'w-8 h-8', label: '어른 냠냠이' }
+        };
+
+        const shuffleArray = (array) => {
+          const newArray = [...array];
+          for (let i = newArray.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+          }
+          return newArray;
+        };
+
+        const shuffleOptions = (question) => {
+          return {
+            ...question,
+            options: shuffleArray(question.options)
+          };
+        };
+
+        // --- 메인 앱 컴포넌트 ---
+        function WordTamagotchi() {
+          const [gameState, setGameState] = useState('menu'); 
+          const [gameQuestions, setGameQuestions] = useState([]);
+          const [currentIdx, setCurrentIdx] = useState(0);
+          const [level, setLevel] = useState(1);
+          const [exp, setExp] = useState(0); 
+          const maxExpPerLevel = 20; 
+
+          const [monsterState, setMonsterState] = useState('idle'); 
+          const [swallowedWord, setSwallowedWord] = useState('');
+          const [wrongWord, setWrongWord] = useState(null);
           
-          {monsterState === 'happy' && (
-            <Heart className="absolute -top-6 -right-4 text-red-500 fill-red-500 animate-bounce" size={32} />
-          )}
-        </div>
-      </div>
+          const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+          const audioRef = useRef(null);
 
-      <div className={`w-full grid grid-cols-1 md:grid-cols-3 gap-4 mt-auto transition-opacity duration-300 ${(monsterState === 'eating' || monsterState === 'levelup') ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-        {currentData.options.map((word, index) => {
-          const isWrong = wrongWord === word;
+          useEffect(() => {
+            audioRef.current = new Audio('music/bgm.mp3'); 
+            audioRef.current.loop = true; 
+            audioRef.current.volume = 0.3; 
+
+            return () => {
+              if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current = null;
+              }
+            };
+          }, []);
+
+          const toggleMusic = () => {
+            if (!audioRef.current) return;
+            if (isMusicPlaying) {
+              audioRef.current.pause();
+            } else {
+              audioRef.current.play().catch(e => console.log("Music file not found in music/bgm.mp3"));
+            }
+            setIsMusicPlaying(!isMusicPlaying);
+          };
+
+          const prepareGameData = (startLevel) => {
+            let questions = [];
+            if (startLevel === 1) {
+                questions = [...shuffleArray(DATA_POOL.level1), ...shuffleArray(DATA_POOL.level2), ...shuffleArray(DATA_POOL.level3)];
+            } else if (startLevel === 2) {
+                questions = [...shuffleArray(DATA_POOL.level2), ...shuffleArray(DATA_POOL.level3)];
+            } else {
+                questions = [...shuffleArray(DATA_POOL.level3)];
+            }
+            return questions.map(shuffleOptions);
+          };
+
+          const speakWord = useCallback((text) => {
+            if ('speechSynthesis' in window) {
+              window.speechSynthesis.cancel();
+              const utterance = new SpeechSynthesisUtterance(text);
+              utterance.lang = 'ko-KR';
+              utterance.rate = 0.85; 
+              utterance.pitch = level === 1 ? 1.4 : (level === 2 ? 1.1 : 0.9);
+              window.speechSynthesis.speak(utterance);
+            }
+          }, [level]);
+
+          const playSound = useCallback((type) => {
+            try {
+              const ctx = new (window.AudioContext || window.webkitAudioContext)();
+              const osc = ctx.createOscillator();
+              const gainNode = ctx.createGain();
+              osc.connect(gainNode);
+              gainNode.connect(ctx.destination);
+              
+              if (type === 'eat') {
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(400, ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, ctx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.2, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.1);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.1);
+              } else if (type === 'happy') {
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(523.25, ctx.currentTime);
+                osc.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
+                gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.3);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.3);
+              } else if (type === 'levelup') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(440, ctx.currentTime);
+                osc.frequency.setValueAtTime(554, ctx.currentTime + 0.1);
+                osc.frequency.setValueAtTime(659, ctx.currentTime + 0.2);
+                osc.frequency.setValueAtTime(880, ctx.currentTime + 0.3);
+                gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.6);
+                osc.start();
+                osc.stop(ctx.currentTime + 0.6);
+              }
+            } catch (e) {
+              console.log("Audio API not supported");
+            }
+          }, []);
+
+          const startGame = (startLevel) => {
+            const questions = prepareGameData(startLevel);
+            setGameQuestions(questions);
+            setCurrentIdx(0);
+            setLevel(startLevel);
+            setExp(0);
+            setMonsterState('idle');
+            setGameState('playing');
+          };
+
+          const handleFeed = (selectedWord) => {
+            if (monsterState !== 'idle' && monsterState !== 'sad') return;
+            
+            speakWord(selectedWord);
+            const currentData = gameQuestions[currentIdx];
+            
+            if (selectedWord === currentData.answer) {
+              setMonsterState('eating');
+              setSwallowedWord(selectedWord);
+              playSound('eat');
+              
+              setTimeout(() => {
+                setMonsterState('happy');
+                playSound('happy');
+                setSwallowedWord('');
+                
+                const newExp = exp + 1;
+                setExp(newExp);
+
+                setTimeout(() => {
+                  if (newExp >= maxExpPerLevel) {
+                    handleLevelUp();
+                  } else {
+                    nextQuestion();
+                  }
+                }, 1500);
+
+              }, 600); 
+
+            } else {
+              setMonsterState('sad');
+              setWrongWord(selectedWord);
+              setTimeout(() => {
+                setMonsterState('idle');
+                setWrongWord(null);
+              }, 800);
+            }
+          };
+
+          const handleLevelUp = () => {
+            if (level === 3) {
+              setGameState('clear');
+              speakWord("축하해요! 냠냠이가 왕관을 썼어요!");
+              return;
+            }
+            
+            setMonsterState('levelup');
+            playSound('levelup');
+            speakWord(level === 1 ? "냠냠이가 어린이가 되었어요!" : "와아! 냠냠이가 다 컸어요!");
+            
+            setTimeout(() => {
+              setLevel(prev => prev + 1);
+              setExp(0);
+              setMonsterState('idle');
+              nextQuestion(true);
+            }, 2500);
+          };
+
+          const nextQuestion = (isAfterLevelUp = false) => {
+            const nextIdx = currentIdx + 1;
+            if (nextIdx < gameQuestions.length) {
+              setCurrentIdx(nextIdx);
+              setMonsterState('idle');
+            }
+          };
+
+          if (gameState === 'menu') {
+            return (
+              <div className="flex flex-col items-center justify-center min-h-screen font-sans p-6 rounded-2xl relative">
+                <button 
+                  onClick={toggleMusic}
+                  className="absolute top-6 right-6 p-3 bg-white rounded-full shadow-md hover:bg-gray-100 transition-all"
+                >
+                  {isMusicPlaying ? <Music className="text-green-500" /> : <Music2 className="text-gray-400" />}
+                </button>
+
+                <div className="w-32 h-32 bg-green-300 rounded-full flex flex-col items-center justify-center mb-6 animate-bounce shadow-lg">
+                  <div className="flex space-x-3 mb-2"><div className="w-4 h-4 bg-gray-800 rounded-full"></div><div className="w-4 h-4 bg-gray-800 rounded-full"></div></div>
+                  <div className="w-10 h-4 bg-gray-800 rounded-b-full"></div>
+                </div>
+                <h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 mb-4 tracking-tight">글자 괴물 <span className="text-green-500">냠냠이</span></h1>
+                <p className="text-lg text-gray-600 mb-10 font-medium">단어를 먹고 무럭무럭 자라나요!</p>
+                
+                <button 
+                  onClick={() => setGameState('levelSelect')}
+                  className="px-10 py-5 bg-green-500 text-white rounded-full font-bold text-2xl hover:bg-green-600 transition-all shadow-xl active:scale-95 flex items-center space-x-2"
+                >
+                  <Play fill="currentColor" />
+                  <span>게임 시작</span>
+                </button>
+              </div>
+            );
+          }
+
+          if (gameState === 'levelSelect') {
+            return (
+                <div className="flex flex-col items-center justify-center min-h-screen font-sans p-6 rounded-2xl">
+                    <h2 className="text-3xl font-extrabold text-gray-800 mb-8">어떤 냠냠이를 키울까요?</h2>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
+                        <button 
+                            onClick={() => startGame(1)}
+                            className="flex flex-col items-center p-6 bg-white rounded-3xl border-4 border-green-200 hover:border-green-400 hover:bg-green-50 transition-all shadow-md active:scale-95"
+                        >
+                            <div className="w-20 h-20 bg-green-300 rounded-full mb-4 shadow-sm" />
+                            <span className="text-xl font-bold text-gray-700">1단계: 소리와 단어</span>
+                            <span className="text-sm text-gray-500 mt-2">"멍멍" → 강아지</span>
+                        </button>
+
+                        <button 
+                            onClick={() => startGame(2)}
+                            className="flex flex-col items-center p-6 bg-white rounded-3xl border-4 border-blue-200 hover:border-blue-400 hover:bg-blue-50 transition-all shadow-md active:scale-95"
+                        >
+                            <div className="w-24 h-24 bg-blue-400 rounded-full mb-4 shadow-sm" />
+                            <span className="text-xl font-bold text-gray-700">2단계: 반대말</span>
+                            <span className="text-sm text-gray-500 mt-2">"크다" → 작다</span>
+                        </button>
+
+                        <button 
+                            onClick={() => startGame(3)}
+                            className="flex flex-col items-center p-6 bg-white rounded-3xl border-4 border-purple-200 hover:border-purple-400 hover:bg-purple-50 transition-all shadow-md active:scale-95"
+                        >
+                            <div className="w-28 h-28 bg-purple-500 rounded-full mb-4 shadow-sm" />
+                            <span className="text-xl font-bold text-gray-700">3단계: 문장 완성</span>
+                            <span className="text-sm text-gray-500 mt-2">"나비가" → 날아요</span>
+                        </button>
+                    </div>
+
+                    <button onClick={() => setGameState('menu')} className="mt-10 px-6 py-2 bg-gray-200 rounded-full text-gray-600 font-bold hover:bg-gray-300">
+                        뒤로 가기
+                    </button>
+                </div>
+            );
+          }
+
+          if (gameState === 'clear') {
+            return (
+              <div className="flex flex-col items-center justify-center min-h-screen font-sans p-6 rounded-2xl text-center">
+                <Sparkles className="text-purple-400 w-16 h-16 mb-6 animate-spin-slow" />
+                
+                <div className={`${MONSTER_STYLES[3].size} ${MONSTER_STYLES[3].color} rounded-full flex flex-col items-center justify-center mb-8 shadow-2xl animate-bounce relative`}>
+                  <div className="absolute -top-12 animate-pulse">
+                    <Crown className="text-yellow-400 fill-yellow-400 drop-shadow-lg w-16 h-16" />
+                  </div>
+                  <div className="flex space-x-6 mb-4"><div className={`${MONSTER_STYLES[3].eye} bg-gray-800 rounded-full`}></div><div className={`${MONSTER_STYLES[3].eye} bg-gray-800 rounded-full`}></div></div>
+                  <div className="w-24 h-12 bg-gray-800 rounded-b-full relative overflow-hidden"><div className="absolute bottom-0 w-full h-4 bg-red-400"></div></div>
+                </div>
+                
+                <h2 className="text-4xl md:text-5xl font-extrabold text-purple-600 mb-6">냠냠이 왕이 되었어요!</h2>
+                <p className="text-xl text-gray-500 mb-8 font-bold">참 잘했어요! 멋진 단어 마법사님!</p>
+                <button 
+                  onClick={() => setGameState('menu')}
+                  className="flex items-center space-x-2 px-8 py-4 bg-gray-800 text-white rounded-full font-bold text-xl hover:bg-gray-700 transition-colors shadow-lg active:scale-95"
+                >
+                  <RotateCcw size={24} />
+                  <span>다시 키우기</span>
+                </button>
+              </div>
+            );
+          }
+
+          const currentData = gameQuestions[currentIdx];
+          const style = MONSTER_STYLES[level];
+          const progressPercent = (exp / maxExpPerLevel) * 100;
+
           return (
-            <button
-              key={`${currentIdx}-${index}`}
-              onClick={() => handleFeed(word)}
-              disabled={monsterState !== 'idle' && monsterState !== 'sad'}
-              className={`
-                relative p-6 rounded-3xl font-bold text-3xl md:text-4xl shadow-md transition-all duration-300
-                bg-white text-gray-700 border-b-8 border-gray-200
-                hover:bg-gray-50 hover:scale-105 active:border-b-0 active:translate-y-2
-                ${isWrong ? 'bg-red-100 text-red-500 border-red-300 animate-shake' : ''}
-              `}
-            >
-              {word}
-            </button>
+            <div className="flex flex-col min-h-screen font-sans p-4 rounded-2xl relative overflow-hidden">
+              <div className="flex justify-between items-center bg-white p-4 rounded-3xl shadow-sm z-10">
+                <div className="flex flex-col w-full mr-4">
+                  <div className="flex justify-between items-end mb-1">
+                    <span className="text-sm font-bold text-gray-500">{style.label} (Lv.{level})</span>
+                    <span className="text-xs font-bold text-gray-400">{exp} / {maxExpPerLevel}</span>
+                  </div>
+                  <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-green-400 transition-all duration-500 ease-out"
+                      style={{ width: `${progressPercent}%` }}
+                    />
+                  </div>
+                </div>
+                <button onClick={() => setGameState('menu')} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 flex-shrink-0">
+                  <Home className="text-gray-600" size={24} />
+                </button>
+              </div>
+
+              <div className="flex-1 flex flex-col items-center justify-center w-full relative">
+                <div 
+                  onClick={() => speakWord(currentData.prompt)}
+                  className={`
+                    cursor-pointer active:scale-95
+                    mb-8 bg-white px-6 py-4 rounded-3xl rounded-br-none shadow-md border-2 border-gray-100 
+                    transition-all duration-300 hover:border-green-300 hover:shadow-lg group
+                    ${monsterState === 'levelup' ? 'opacity-0' : 'opacity-100'}
+                  `}
+                >
+                  <div className="flex items-center justify-center space-x-2">
+                    <p className="text-2xl md:text-3xl font-bold text-gray-800 text-center break-keep">
+                      {monsterState === 'happy' ? "우와! 꿀맛이야!" : currentData.prompt}
+                    </p>
+                    {monsterState !== 'happy' && (
+                      <Volume2 className="text-gray-400 group-hover:text-green-500 transition-colors" size={24} />
+                    )}
+                  </div>
+                </div>
+
+                <div className={`
+                  relative transition-all duration-700 ease-in-out rounded-full flex flex-col items-center justify-center shadow-xl
+                  ${style.size} ${style.color}
+                  ${monsterState === 'sad' ? 'animate-shake bg-gray-400' : ''}
+                  ${monsterState === 'happy' ? 'animate-bounce' : ''}
+                  ${monsterState === 'levelup' ? 'animate-levelup bg-yellow-300' : ''}
+                `}>
+                  {level === 3 && monsterState === 'happy' && (
+                    <div className="absolute -top-10 animate-bounce transition-opacity duration-500">
+                      <Crown className="text-yellow-400 fill-yellow-400 drop-shadow-md w-12 h-12" />
+                    </div>
+                  )}
+
+                  <div className={`flex transition-all duration-300 ${level === 1 ? 'space-x-3' : level === 2 ? 'space-x-5' : 'space-x-8'} mb-2`}>
+                    {monsterState === 'happy' ? (
+                      <>
+                        <div className="text-gray-800 font-bold text-2xl md:text-4xl">^</div>
+                        <div className="text-gray-800 font-bold text-2xl md:text-4xl">^</div>
+                      </>
+                    ) : monsterState === 'sad' ? (
+                      <>
+                        <div className="text-gray-800 font-bold text-2xl md:text-4xl">{'>'}</div>
+                        <div className="text-gray-800 font-bold text-2xl md:text-4xl">{'<'}</div>
+                      </>
+                    ) : (
+                      <>
+                        <div className={`${style.eye} bg-gray-800 rounded-full`}></div>
+                        <div className={`${style.eye} bg-gray-800 rounded-full`}></div>
+                      </>
+                    )}
+                  </div>
+
+                  <div className={`
+                    bg-gray-800 transition-all duration-300 flex items-center justify-center overflow-hidden relative
+                    ${monsterState === 'idle' ? 'w-1/3 h-2 rounded-full mt-2' : ''}
+                    ${monsterState === 'eating' ? 'w-1/2 h-1/2 rounded-full animate-chomp' : ''}
+                    ${monsterState === 'happy' ? 'w-1/2 h-1/3 rounded-b-full mt-1' : ''}
+                    ${monsterState === 'sad' ? 'w-1/3 h-2 rounded-t-full mt-4' : ''}
+                    ${monsterState === 'levelup' ? 'w-1/2 h-1/3 rounded-b-full mt-1' : ''}
+                  `}>
+                    {monsterState === 'eating' && swallowedWord && (
+                      <span className="text-white font-bold text-xl md:text-3xl absolute animate-ping">{swallowedWord}</span>
+                    )}
+                    {(monsterState === 'happy' || monsterState === 'levelup') && (
+                      <div className="absolute bottom-0 w-3/4 h-1/2 bg-red-400 rounded-t-full"></div>
+                    )}
+                  </div>
+                  
+                  {monsterState === 'happy' && (
+                    <Heart className="absolute -top-6 -right-4 text-red-500 fill-red-500 animate-bounce w-8 h-8" />
+                  )}
+                </div>
+              </div>
+
+              <div className={`w-full grid grid-cols-1 md:grid-cols-3 gap-4 mt-auto transition-opacity duration-300 ${(monsterState === 'eating' || monsterState === 'levelup') ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+                {currentData.options.map((word, index) => {
+                  const isWrong = wrongWord === word;
+                  return (
+                    <button
+                      key={`${currentIdx}-${index}`}
+                      onClick={() => handleFeed(word)}
+                      disabled={monsterState !== 'idle' && monsterState !== 'sad'}
+                      className={`
+                        relative p-6 rounded-3xl font-bold text-3xl md:text-4xl shadow-md transition-all duration-300
+                        bg-white text-gray-700 border-b-8 border-gray-200
+                        hover:bg-gray-50 hover:scale-105 active:border-b-0 active:translate-y-2
+                        ${isWrong ? 'bg-red-100 text-red-500 border-red-300 animate-shake' : ''}
+                      `}
+                    >
+                      {word}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           );
-        })}
-      </div>
-    </div>
-  );
-}
+        }
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<WordTamagotchi />);
+    </script>
+</body>
+</html>
