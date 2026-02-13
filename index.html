@@ -46,8 +46,7 @@
     <script type="text/babel">
         const { useState, useEffect, useCallback, useRef } = React;
 
-        // --- 아이콘 컴포넌트 (단순화된 버전) ---
-        // 복잡한 prop 전달 방식을 제거하고 직관적인 SVG 형태로 변경했습니다.
+        // --- 아이콘 컴포넌트 ---
         const Play = (props) => (
             <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="5 3 19 12 5 21 5 3" />
@@ -108,6 +107,12 @@
             <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <circle cx="8" cy="18" r="4"/>
                 <path d="M12 18V2l7 4"/>
+            </svg>
+        );
+        
+        const Wrench = (props) => (
+             <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>
             </svg>
         );
 
@@ -217,31 +222,94 @@
           const [swallowedWord, setSwallowedWord] = useState('');
           const [wrongWord, setWrongWord] = useState(null);
           
+          // 음악 및 디버깅 상태
           const [isMusicPlaying, setIsMusicPlaying] = useState(false);
+          const [showDebug, setShowDebug] = useState(false);
+          const [audioPath, setAudioPath] = useState('music/bgm.mp3'); // 기본 경로
+          const [audioLog, setAudioLog] = useState([]);
           const audioRef = useRef(null);
 
+          // 로그 헬퍼
+          const addLog = (msg) => {
+             const time = new Date().toLocaleTimeString();
+             setAudioLog(prev => [`[${time}] ${msg}`, ...prev].slice(0, 5));
+          };
+
+          // 오디오 초기화 및 이벤트 리스너 설정
           useEffect(() => {
-            // [수정] public/music/bgm.mp3 경로 사용
-            audioRef.current = new Audio('public/music/bgm.mp3'); 
-            audioRef.current.loop = true; 
-            audioRef.current.volume = 0.3; 
+            const audio = new Audio();
+            audioRef.current = audio;
+            audio.loop = true;
+            audio.volume = 0.3;
+            
+            // 이벤트 리스너
+            const handleCanPlay = () => addLog("오디오 준비 완료 (canplay)");
+            const handleError = (e) => {
+                let errorMsg = "알 수 없는 에러";
+                if (audio.error) {
+                    switch (audio.error.code) {
+                        case 1: errorMsg = "사용자가 중단함 (MEDIA_ERR_ABORTED)"; break;
+                        case 2: errorMsg = "네트워크 에러 (MEDIA_ERR_NETWORK)"; break;
+                        case 3: errorMsg = "디코딩 에러 (MEDIA_ERR_DECODE)"; break;
+                        case 4: errorMsg = "소스 지원 안함/경로 틀림 (MEDIA_ERR_SRC_NOT_SUPPORTED)"; break;
+                    }
+                }
+                addLog(`에러 발생: ${errorMsg}`);
+                setIsMusicPlaying(false);
+            };
+            const handlePlay = () => {
+                addLog("재생 시작");
+                setIsMusicPlaying(true);
+            };
+            const handlePause = () => {
+                addLog("일시 정지");
+                setIsMusicPlaying(false);
+            };
+
+            audio.addEventListener('canplay', handleCanPlay);
+            audio.addEventListener('error', handleError);
+            audio.addEventListener('play', handlePlay);
+            audio.addEventListener('pause', handlePause);
 
             return () => {
-              if (audioRef.current) {
-                audioRef.current.pause();
+                audio.removeEventListener('canplay', handleCanPlay);
+                audio.removeEventListener('error', handleError);
+                audio.removeEventListener('play', handlePlay);
+                audio.removeEventListener('pause', handlePause);
+                audio.pause();
                 audioRef.current = null;
-              }
             };
           }, []);
 
+          // 오디오 경로 변경 시 적용
+          useEffect(() => {
+              if(audioRef.current) {
+                  addLog(`경로 설정: ${audioPath}`);
+                  audioRef.current.src = audioPath;
+                  // 경로 변경 후 자동 재생하지 않음 (브라우저 정책 준수)
+                  setIsMusicPlaying(false);
+              }
+          }, [audioPath]);
+
           const toggleMusic = () => {
             if (!audioRef.current) return;
+            
             if (isMusicPlaying) {
               audioRef.current.pause();
             } else {
-              audioRef.current.play().catch(e => console.log("Music file playback failed:", e));
+              // 사용자 상호작용(클릭) 내에서 실행되므로 재생 가능성 높음
+              const playPromise = audioRef.current.play();
+              if (playPromise !== undefined) {
+                playPromise.catch(error => {
+                  addLog(`재생 실패: ${error.name}`);
+                  console.error("Audio play failed:", error);
+                });
+              }
             }
-            setIsMusicPlaying(!isMusicPlaying);
+          };
+
+          const changePath = (newPath) => {
+              setAudioPath(newPath);
           };
 
           const prepareGameData = (startLevel) => {
@@ -383,15 +451,63 @@
             }
           };
 
+          // --- UI 렌더링 헬퍼 ---
+          // 음악 버튼과 디버그 버튼은 항상 표시
+          const renderOverlayControls = () => (
+             <>
+                <div className="absolute top-6 right-6 flex gap-2 z-50">
+                    <button 
+                      onClick={toggleMusic}
+                      className={`p-3 rounded-full shadow-md transition-all ${isMusicPlaying ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}
+                      title="음악 켜기/끄기"
+                    >
+                      {isMusicPlaying ? <Music /> : <Music2 />}
+                    </button>
+                    <button 
+                      onClick={() => setShowDebug(!showDebug)}
+                      className={`p-3 rounded-full shadow-md transition-all ${showDebug ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}
+                      title="디버깅 패널"
+                    >
+                      <Wrench />
+                    </button>
+                </div>
+                
+                {showDebug && (
+                    <div className="absolute bottom-4 right-4 bg-black/80 text-white p-4 rounded-xl text-xs z-50 w-64 shadow-2xl backdrop-blur-sm">
+                        <h3 className="font-bold text-yellow-400 mb-2 border-b border-gray-600 pb-1">🔧 오디오 디버거</h3>
+                        <div className="mb-2">
+                            <span className="text-gray-400">상태: </span>
+                            <span className={isMusicPlaying ? "text-green-400" : "text-red-400"}>
+                                {isMusicPlaying ? "재생 중" : "정지됨"}
+                            </span>
+                        </div>
+                        <div className="mb-2">
+                            <span className="text-gray-400">현재 경로: </span>
+                            <div className="text-blue-300 break-all">{audioPath}</div>
+                        </div>
+                        <div className="mb-2">
+                            <div className="text-gray-400 mb-1">경로 테스트:</div>
+                            <div className="flex flex-wrap gap-1">
+                                <button onClick={() => changePath('music/bgm.mp3')} className="bg-gray-700 px-2 py-1 rounded hover:bg-gray-600">music/...</button>
+                                <button onClick={() => changePath('public/music/bgm.mp3')} className="bg-gray-700 px-2 py-1 rounded hover:bg-gray-600">public/...</button>
+                                <button onClick={() => changePath('./music/bgm.mp3')} className="bg-gray-700 px-2 py-1 rounded hover:bg-gray-600">./music...</button>
+                            </div>
+                        </div>
+                        <div className="border-t border-gray-600 pt-2 mt-2">
+                            <div className="text-gray-400 mb-1">로그:</div>
+                            <div className="max-h-24 overflow-y-auto text-gray-300 font-mono">
+                                {audioLog.map((log, i) => <div key={i}>{log}</div>)}
+                            </div>
+                        </div>
+                    </div>
+                )}
+             </>
+          );
+
           if (gameState === 'menu') {
             return (
               <div className="flex flex-col items-center justify-center min-h-screen font-sans p-6 rounded-2xl relative">
-                <button 
-                  onClick={toggleMusic}
-                  className="absolute top-6 right-6 p-3 bg-white rounded-full shadow-md hover:bg-gray-100 transition-all"
-                >
-                  {isMusicPlaying ? <Music className="text-green-500" /> : <Music2 className="text-gray-400" />}
-                </button>
+                {renderOverlayControls()}
 
                 <div className="w-32 h-32 bg-green-300 rounded-full flex flex-col items-center justify-center mb-6 animate-bounce shadow-lg">
                   <div className="flex space-x-3 mb-2"><div className="w-4 h-4 bg-gray-800 rounded-full"></div><div className="w-4 h-4 bg-gray-800 rounded-full"></div></div>
@@ -413,7 +529,8 @@
 
           if (gameState === 'levelSelect') {
             return (
-                <div className="flex flex-col items-center justify-center min-h-screen font-sans p-6 rounded-2xl">
+                <div className="flex flex-col items-center justify-center min-h-screen font-sans p-6 rounded-2xl relative">
+                    {renderOverlayControls()}
                     <h2 className="text-3xl font-extrabold text-gray-800 mb-8">어떤 냠냠이를 키울까요?</h2>
                     
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
@@ -454,7 +571,8 @@
 
           if (gameState === 'clear') {
             return (
-              <div className="flex flex-col items-center justify-center min-h-screen font-sans p-6 rounded-2xl text-center">
+              <div className="flex flex-col items-center justify-center min-h-screen font-sans p-6 rounded-2xl text-center relative">
+                {renderOverlayControls()}
                 <Sparkles className="text-purple-400 w-16 h-16 mb-6 animate-spin-slow" />
                 
                 <div className={`${MONSTER_STYLES[3].size} ${MONSTER_STYLES[3].color} rounded-full flex flex-col items-center justify-center mb-8 shadow-2xl animate-bounce relative`}>
@@ -501,6 +619,8 @@
                   <Home className="text-gray-600" size={24} />
                 </button>
               </div>
+              
+              {renderOverlayControls()}
 
               <div className="flex-1 flex flex-col items-center justify-center w-full relative">
                 <div 
