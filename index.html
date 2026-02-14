@@ -313,7 +313,7 @@
           
           const [isMusicPlaying, setIsMusicPlaying] = useState(false);
           const [showDebug, setShowDebug] = useState(false);
-          // [수정] 기본값 제거, 캐릭터 선택 시 설정
+          // [수정] 오디오 경로 초기값 빈 문자열
           const [audioPath, setAudioPath] = useState(''); 
           const [audioLog, setAudioLog] = useState([]);
           const audioRef = useRef(null);
@@ -391,14 +391,9 @@
           useEffect(() => {
               if(audioRef.current && audioPath) {
                   addLog(`경로 설정: ${audioPath}`);
-                  audioRef.current.src = audioPath;
-                  // 경로 변경 시 자동 재생 시도 (사용자 인터랙션 직후라면 성공 가능)
-                  const playPromise = audioRef.current.play();
-                  if (playPromise !== undefined) {
-                      playPromise.catch(e => {
-                          addLog(`자동 재생 실패: ${e.name}`);
-                          setIsMusicPlaying(false);
-                      });
+                  // 이미 같은 경로라면 다시 로드하지 않음 (불필요한 중단 방지)
+                  if (audioRef.current.src !== new URL(audioPath, window.location.href).href) {
+                      audioRef.current.src = audioPath;
                   }
               }
           }, [audioPath]);
@@ -409,9 +404,16 @@
               audioRef.current.pause();
             } else {
               if (!audioPath) {
-                  // 경로가 없는 경우(캐릭터 선택 전), 현재 캐릭터에 맞춰 설정
+                  // 경로가 없는 경우(캐릭터 선택 전), 현재 캐릭터에 맞춰 설정 (기본값)
                   const defaultPath = selectedChar === 'nyam' ? 'public/music/bgm1.mp3' : 'public/music/bgm2.mp3';
                   setAudioPath(defaultPath);
+                  
+                  // 경로 설정 직후 재생 시도
+                  setTimeout(() => {
+                      if (audioRef.current) {
+                          audioRef.current.play().catch(e => addLog(`재생 실패: ${e.name}`));
+                      }
+                  }, 100);
               } else {
                   audioRef.current.play().catch(e => {
                       addLog(`재생 실패: ${e.name}`);
@@ -490,12 +492,28 @@
             } catch (e) { console.log("Audio API issue"); }
           }, []);
 
-          // [수정] 캐릭터 선택 시 BGM 경로 변경
+          // [수정] 캐릭터 선택 시 BGM 경로 변경 및 즉시 재생
           const selectCharacter = (char) => {
               setSelectedChar(char);
               setGameState('menu');
+              
               // 캐릭터별 BGM 설정 (bgm1: 냠냠이, bgm2: 뇸뇸이)
-              setAudioPath(char === 'nyam' ? 'public/music/bgm1.mp3' : 'public/music/bgm2.mp3');
+              const bgmFile = char === 'nyam' ? 'bgm1.mp3' : 'bgm2.mp3';
+              const newPath = `public/music/${bgmFile}`;
+              
+              setAudioPath(newPath);
+              
+              // 사용자 상호작용(클릭) 내에서 즉시 재생 시도
+              if (audioRef.current) {
+                  audioRef.current.src = newPath;
+                  audioRef.current.play()
+                      .then(() => setIsMusicPlaying(true))
+                      .catch(e => {
+                          console.log("Auto-play blocked or file missing:", e);
+                          addLog(`자동 재생 실패: ${e.name}`);
+                          // 실패해도 상태는 false로 유지되므로 버튼으로 켤 수 있음
+                      });
+              }
           };
 
           const startGame = (startLevel) => {
@@ -540,6 +558,10 @@
             } else {
               setMonsterState('sad');
               setWrongWord(selectedOption);
+              
+              // [수정] 틀리면 게이지 깎임 (0보다 작아지지 않음)
+              setExp(prev => (prev > 0 ? prev - 1 : 0));
+
               setTimeout(() => {
                 setMonsterState('idle');
                 setWrongWord(null);
