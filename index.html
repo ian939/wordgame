@@ -222,11 +222,8 @@
             
             if (level === 1) {
                 // 1) 레벨 1: 한자리 - 한자리 = 한자리 (0 빼기 제외)
-                // a: 1~9 (결과가 양수여야 하므로 0은 제외)
                 a = Math.floor(Math.random() * 9) + 1; 
-                // b: 1~a (결과가 0 이상이어야 함, 0을 빼는건 제외하므로 최소 1)
                 b = Math.floor(Math.random() * a) + 1; 
-                
                 answer = a - b;
                 prompt = `${a} 빼기 ${b}는?`;
                 op = "-";
@@ -243,7 +240,7 @@
             } else {
                 // 3) 레벨 3: 두자리 - 한자리 = 한자리 (결과가 10 미만)
                 do {
-                    a = Math.floor(Math.random() * 9) + 10; // 10~18 (최대 18이어야 한자리 빼서 한자리가 나옴)
+                    a = Math.floor(Math.random() * 9) + 10; // 10~18 
                     b = Math.floor(Math.random() * 9) + 1;  // 1~9
                 } while (a - b >= 10 || a - b < 0);
 
@@ -252,28 +249,25 @@
                 op = "-";
             }
 
-            // 오답 생성 (정답 근처의 숫자들)
             let options = new Set([answer]);
             let attempts = 0;
             while (options.size < 3 && attempts < 20) {
-                let offset = Math.floor(Math.random() * 5) - 2; // -2 ~ +2
+                let offset = Math.floor(Math.random() * 5) - 2; 
                 let fake = answer + offset;
                 if (fake >= 0 && fake !== answer) {
                     options.add(fake);
                 }
                 attempts++;
             }
-            // 만약 오답이 부족하면 강제로 추가
             while (options.size < 3) {
                 options.add(Math.floor(Math.random() * 20));
             }
             
-            // 옵션 섞기 및 문자열 변환
             const optionsArray = Array.from(options).sort(() => Math.random() - 0.5).map(String);
 
             return {
-                prompt: prompt, // TTS용
-                display: `${a} ${op} ${b}`, // 화면 표시용
+                prompt: prompt,
+                display: `${a} ${op} ${b}`,
                 answer: String(answer),
                 options: optionsArray
             };
@@ -304,8 +298,8 @@
 
         // --- 메인 앱 컴포넌트 ---
         function WordTamagotchi() {
-          const [gameState, setGameState] = useState('characterSelect'); // 'characterSelect', 'menu', 'levelSelect', 'playing', 'clear'
-          const [selectedChar, setSelectedChar] = useState('nyam'); // 'nyam', 'nyom'
+          const [gameState, setGameState] = useState('characterSelect'); 
+          const [selectedChar, setSelectedChar] = useState('nyam'); 
           
           const [gameQuestions, setGameQuestions] = useState([]);
           const [currentIdx, setCurrentIdx] = useState(0);
@@ -319,11 +313,11 @@
           
           const [isMusicPlaying, setIsMusicPlaying] = useState(false);
           const [showDebug, setShowDebug] = useState(false);
-          const [audioPath, setAudioPath] = useState('public/music/bgm.mp3');
+          // [수정] 기본값 제거, 캐릭터 선택 시 설정
+          const [audioPath, setAudioPath] = useState(''); 
           const [audioLog, setAudioLog] = useState([]);
           const audioRef = useRef(null);
 
-          // 스타일 정의 (뇸뇸이 설명 업데이트)
           const getStyles = () => {
               if (selectedChar === 'nyam') {
                   return {
@@ -340,14 +334,13 @@
                       ]
                   };
               } else {
-                  // 뇸뇸이 (슬라임)
                   return {
                       bg: "bg-cyan-400",
                       text: "text-cyan-600",
                       lightBg: "bg-cyan-50",
                       label: "뇸뇸이",
-                      shape: "rounded-[3rem] w-28 h-40 animate-jelly", // 길쭉한 모양
-                      eye: "w-3 h-5 bg-white", // 눈 모양도 조금 다르게
+                      shape: "rounded-[3rem] w-28 h-40 animate-jelly", 
+                      eye: "w-3 h-5 bg-white", 
                       levels: [
                           { size: 'w-28 h-40', desc: '한자리 빼기' },
                           { size: 'w-36 h-52', desc: '두자리 만들기 더하기' },
@@ -358,14 +351,11 @@
           };
           const currentStyle = getStyles();
 
-          // ... (나머지 코드는 동일)
-          
           const addLog = (msg) => {
              const time = new Date().toLocaleTimeString();
              setAudioLog(prev => [`[${time}] ${msg}`, ...prev].slice(0, 5));
           };
 
-          // 오디오 초기화
           useEffect(() => {
             const audio = new Audio();
             audioRef.current = audio;
@@ -386,7 +376,6 @@
             audio.addEventListener('error', handleError);
             audio.addEventListener('play', handlePlay);
             audio.addEventListener('pause', handlePause);
-            audio.src = audioPath; // 초기 로드
 
             return () => {
                 audio.removeEventListener('canplay', handleCanPlay);
@@ -398,12 +387,19 @@
             };
           }, []);
 
-          // 오디오 경로 변경
+          // 오디오 경로 변경 감지 및 재생 시도
           useEffect(() => {
-              if(audioRef.current) {
+              if(audioRef.current && audioPath) {
                   addLog(`경로 설정: ${audioPath}`);
                   audioRef.current.src = audioPath;
-                  setIsMusicPlaying(false);
+                  // 경로 변경 시 자동 재생 시도 (사용자 인터랙션 직후라면 성공 가능)
+                  const playPromise = audioRef.current.play();
+                  if (playPromise !== undefined) {
+                      playPromise.catch(e => {
+                          addLog(`자동 재생 실패: ${e.name}`);
+                          setIsMusicPlaying(false);
+                      });
+                  }
               }
           }, [audioPath]);
 
@@ -412,16 +408,20 @@
             if (isMusicPlaying) {
               audioRef.current.pause();
             } else {
-              audioRef.current.play().catch(e => {
-                  addLog(`재생 실패: ${e.name}`);
-                  console.error(e);
-              });
+              if (!audioPath) {
+                  // 경로가 없는 경우(캐릭터 선택 전), 현재 캐릭터에 맞춰 설정
+                  const defaultPath = selectedChar === 'nyam' ? 'public/music/bgm1.mp3' : 'public/music/bgm2.mp3';
+                  setAudioPath(defaultPath);
+              } else {
+                  audioRef.current.play().catch(e => {
+                      addLog(`재생 실패: ${e.name}`);
+                  });
+              }
             }
           };
 
           const changePath = (newPath) => setAudioPath(newPath);
 
-          // 게임 데이터 준비
           const prepareGameData = (char, startLevel) => {
             let questions = [];
             if (char === 'nyam') {
@@ -430,7 +430,6 @@
                 else questions = [...shuffleArray(WORD_DATA.level3)];
                 return questions.map(shuffleOptions);
             } else {
-                // 뇸뇸이 (수학)
                 const l1 = generateMathPool(1, 20);
                 const l2 = generateMathPool(2, 20);
                 const l3 = generateMathPool(3, 20);
@@ -491,9 +490,12 @@
             } catch (e) { console.log("Audio API issue"); }
           }, []);
 
+          // [수정] 캐릭터 선택 시 BGM 경로 변경
           const selectCharacter = (char) => {
               setSelectedChar(char);
               setGameState('menu');
+              // 캐릭터별 BGM 설정 (bgm1: 냠냠이, bgm2: 뇸뇸이)
+              setAudioPath(char === 'nyam' ? 'public/music/bgm1.mp3' : 'public/music/bgm2.mp3');
           };
 
           const startGame = (startLevel) => {
@@ -509,7 +511,6 @@
           const handleFeed = (selectedOption) => {
             if (monsterState !== 'idle' && monsterState !== 'sad') return;
             
-            // 뇸뇸이인 경우 숫자만 읽어줌
             speakWord(selectedOption);
             
             const currentData = gameQuestions[currentIdx];
@@ -576,7 +577,7 @@
           // --- 렌더링 헬퍼 ---
           const renderOverlayControls = () => (
              <>
-                <div className="absolute top-6 right-6 flex gap-2 z-50">
+                <div className="absolute top-4 right-4 md:top-6 md:right-6 flex gap-2 z-50">
                     <button onClick={toggleMusic} className={`p-3 rounded-full shadow-md transition-all ${isMusicPlaying ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>
                       {isMusicPlaying ? <Music /> : <Music2 />}
                     </button>
@@ -590,8 +591,8 @@
                         <div>Status: {isMusicPlaying ? "Playing" : "Stopped"}</div>
                         <div className="break-all text-blue-300">{audioPath}</div>
                         <div className="flex flex-wrap gap-1 mt-2">
-                             <button onClick={() => changePath('public/music/bgm.mp3')} className="bg-gray-700 px-2 py-1 rounded">public/...</button>
-                             <button onClick={() => changePath('music/bgm.mp3')} className="bg-gray-700 px-2 py-1 rounded">music/...</button>
+                             <button onClick={() => changePath('public/music/bgm1.mp3')} className="bg-gray-700 px-2 py-1 rounded">bgm1</button>
+                             <button onClick={() => changePath('public/music/bgm2.mp3')} className="bg-gray-700 px-2 py-1 rounded">bgm2</button>
                         </div>
                         <div className="mt-2 border-t pt-2 max-h-24 overflow-y-auto font-mono text-gray-400">
                             {audioLog.map((l,i) => <div key={i}>{l}</div>)}
@@ -606,26 +607,26 @@
               return (
                   <div className="flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 relative">
                       {renderOverlayControls()}
-                      <h1 className="text-3xl md:text-5xl font-extrabold text-gray-800 mb-8 tracking-tight">누구를 키워볼까요?</h1>
+                      <h1 className="text-3xl md:text-5xl font-extrabold text-gray-800 mb-8 tracking-tight text-center">누구를 키워볼까요?</h1>
                       
-                      <div className="flex flex-col md:flex-row gap-8 w-full max-w-2xl justify-center items-stretch">
+                      <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl justify-center items-stretch">
                           {/* 냠냠이 선택 */}
-                          <button onClick={() => selectCharacter('nyam')} className="flex-1 bg-white p-8 rounded-3xl shadow-xl border-4 border-green-200 hover:border-green-400 hover:scale-105 transition-all flex flex-col items-center group">
-                              <div className="w-32 h-32 bg-green-300 rounded-full flex flex-col items-center justify-center mb-6 group-hover:animate-bounce">
+                          <button onClick={() => selectCharacter('nyam')} className="flex-1 bg-white p-6 md:p-8 rounded-3xl shadow-xl border-4 border-green-200 hover:border-green-400 hover:scale-105 transition-all flex flex-col items-center group">
+                              <div className="w-24 h-24 md:w-32 md:h-32 bg-green-300 rounded-full flex flex-col items-center justify-center mb-6 group-hover:animate-bounce">
                                   <div className="flex space-x-3 mb-2"><div className="w-4 h-4 bg-gray-800 rounded-full"></div><div className="w-4 h-4 bg-gray-800 rounded-full"></div></div>
                                   <div className="w-10 h-4 bg-gray-800 rounded-b-full"></div>
                               </div>
-                              <h2 className="text-2xl font-bold text-green-600 mb-2">글자 괴물 냠냠이</h2>
+                              <h2 className="text-xl md:text-2xl font-bold text-green-600 mb-2">글자 괴물 냠냠이</h2>
                               <p className="text-gray-500">단어를 냠냠 먹어요!</p>
                           </button>
 
                           {/* 뇸뇸이 선택 */}
-                          <button onClick={() => selectCharacter('nyom')} className="flex-1 bg-white p-8 rounded-3xl shadow-xl border-4 border-cyan-200 hover:border-cyan-400 hover:scale-105 transition-all flex flex-col items-center group">
-                              <div className="w-28 h-40 bg-cyan-400 rounded-[3rem] flex flex-col items-center justify-center mb-6 group-hover:animate-jelly">
+                          <button onClick={() => selectCharacter('nyom')} className="flex-1 bg-white p-6 md:p-8 rounded-3xl shadow-xl border-4 border-cyan-200 hover:border-cyan-400 hover:scale-105 transition-all flex flex-col items-center group">
+                              <div className="w-20 h-28 md:w-28 md:h-40 bg-cyan-400 rounded-[3rem] flex flex-col items-center justify-center mb-6 group-hover:animate-jelly">
                                   <div className="flex space-x-4 mb-3"><div className="w-3 h-5 bg-white rounded-full"></div><div className="w-3 h-5 bg-white rounded-full"></div></div>
                                   <div className="w-8 h-2 bg-white/50 rounded-full"></div>
                               </div>
-                              <h2 className="text-2xl font-bold text-cyan-600 mb-2">숫자 슬라임 뇸뇸이</h2>
+                              <h2 className="text-xl md:text-2xl font-bold text-cyan-600 mb-2">숫자 슬라임 뇸뇸이</h2>
                               <p className="text-gray-500">숫자를 뇸뇸 먹어요!</p>
                           </button>
                       </div>
@@ -633,36 +634,32 @@
               );
           }
 
-          // 2. 메인 메뉴 (캐릭터 선택 후)
+          // ... (메뉴 및 레벨 선택 화면 코드는 스타일 유지, 렌더링 로직 동일)
           if (gameState === 'menu') {
             return (
               <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 relative ${currentStyle.lightBg}`}>
                 {renderOverlayControls()}
-                
-                <div className="absolute top-6 left-6">
-                    <button onClick={() => setGameState('characterSelect')} className="px-4 py-2 bg-white rounded-full text-gray-500 font-bold hover:bg-gray-100 shadow-sm flex items-center gap-2">
-                        <Home size={18}/> 캐릭터 바꾸기
+                <div className="absolute top-4 left-4 md:top-6 md:left-6">
+                    <button onClick={() => setGameState('characterSelect')} className="px-3 py-1.5 md:px-4 md:py-2 bg-white rounded-full text-gray-500 font-bold hover:bg-gray-100 shadow-sm flex items-center gap-2 text-sm md:text-base">
+                        <Home size={18}/> <span className="hidden md:inline">캐릭터 바꾸기</span>
                     </button>
                 </div>
-
-                <div className={`${currentStyle.shape} ${currentStyle.bg} flex flex-col items-center justify-center mb-6 animate-bounce shadow-lg transition-all`}>
+                <div className={`${currentStyle.shape} ${currentStyle.bg} flex flex-col items-center justify-center mb-6 animate-bounce shadow-lg transition-all transform scale-90 md:scale-100`}>
                   <div className={`flex space-x-3 mb-2`}>
                       <div className={`${currentStyle.eye} rounded-full`}></div>
                       <div className={`${currentStyle.eye} rounded-full`}></div>
                   </div>
                   <div className="w-10 h-4 bg-black/20 rounded-b-full"></div>
                 </div>
-                
-                <h1 className="text-4xl md:text-5xl font-extrabold text-gray-800 mb-4 tracking-tight">
+                <h1 className="text-3xl md:text-5xl font-extrabold text-gray-800 mb-4 tracking-tight text-center">
                     {selectedChar === 'nyam' ? <>글자 괴물 <span className={currentStyle.text}>냠냠이</span></> : <>숫자 슬라임 <span className={currentStyle.text}>뇸뇸이</span></>}
                 </h1>
-                <p className="text-lg text-gray-600 mb-10 font-medium">
+                <p className="text-base md:text-lg text-gray-600 mb-8 font-medium text-center">
                     {selectedChar === 'nyam' ? "단어를 먹고 무럭무럭 자라나요!" : "숫자를 먹으면 쑥쑥 커져요!"}
                 </p>
-                
                 <button 
                   onClick={() => setGameState('levelSelect')}
-                  className={`px-10 py-5 ${currentStyle.bg} text-white rounded-full font-bold text-2xl hover:brightness-90 transition-all shadow-xl active:scale-95 flex items-center space-x-2`}
+                  className={`px-8 py-4 md:px-10 md:py-5 ${currentStyle.bg} text-white rounded-full font-bold text-xl md:text-2xl hover:brightness-90 transition-all shadow-xl active:scale-95 flex items-center space-x-2`}
                 >
                   <Play fill="currentColor" />
                   <span>놀이 시작!</span>
@@ -671,43 +668,40 @@
             );
           }
 
-          // 3. 레벨 선택
           if (gameState === 'levelSelect') {
             return (
                 <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 ${currentStyle.lightBg}`}>
                     {renderOverlayControls()}
-                    <h2 className="text-3xl font-extrabold text-gray-800 mb-8">몇 단계부터 시작할까요?</h2>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 w-full max-w-4xl">
+                    <h2 className="text-2xl md:text-3xl font-extrabold text-gray-800 mb-6 text-center">몇 단계부터 시작할까요?</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-4xl">
                         {[1, 2, 3].map((lv) => (
                             <button 
                                 key={lv}
                                 onClick={() => startGame(lv)}
-                                className={`flex flex-col items-center p-6 bg-white rounded-3xl border-4 ${selectedChar === 'nyam' ? 'border-green-200 hover:border-green-400' : 'border-cyan-200 hover:border-cyan-400'} hover:bg-white/50 transition-all shadow-md active:scale-95`}
+                                className={`flex flex-row md:flex-col items-center p-4 md:p-6 bg-white rounded-3xl border-4 ${selectedChar === 'nyam' ? 'border-green-200 hover:border-green-400' : 'border-cyan-200 hover:border-cyan-400'} hover:bg-white/50 transition-all shadow-md active:scale-95`}
                             >
-                                <div className={`${currentStyle.levels[lv-1].size} ${currentStyle.bg} ${selectedChar === 'nyom' ? 'rounded-[3rem]' : 'rounded-full'} mb-4 shadow-sm flex items-center justify-center text-white font-bold text-xl opacity-80`}>
+                                <div className={`${currentStyle.levels[lv-1].size} ${currentStyle.bg} ${selectedChar === 'nyom' ? 'rounded-[3rem]' : 'rounded-full'} mr-4 md:mr-0 md:mb-4 shadow-sm flex items-center justify-center text-white font-bold text-xl opacity-80 transform scale-50 md:scale-75 origin-left md:origin-center`}>
                                     Lv.{lv}
                                 </div>
-                                <span className="text-xl font-bold text-gray-700">{lv}단계</span>
-                                <span className="text-sm text-gray-500 mt-2">{currentStyle.levels[lv-1].desc}</span>
+                                <div className="text-left md:text-center">
+                                    <span className="block text-xl font-bold text-gray-700">{lv}단계</span>
+                                    <span className="text-sm text-gray-500 mt-1">{currentStyle.levels[lv-1].desc}</span>
+                                </div>
                             </button>
                         ))}
                     </div>
-
-                    <button onClick={() => setGameState('menu')} className="mt-10 px-6 py-2 bg-gray-200 rounded-full text-gray-600 font-bold hover:bg-gray-300">
+                    <button onClick={() => setGameState('menu')} className="mt-8 px-6 py-2 bg-gray-200 rounded-full text-gray-600 font-bold hover:bg-gray-300">
                         뒤로 가기
                     </button>
                 </div>
             );
           }
 
-          // 4. 클리어 화면
           if (gameState === 'clear') {
             return (
               <div className="flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 text-center bg-purple-50">
                 {renderOverlayControls()}
                 <Sparkles className="text-purple-400 w-16 h-16 mb-6 animate-spin-slow" />
-                
                 <div className={`${currentStyle.levels[2].size} ${currentStyle.bg} ${selectedChar === 'nyom' ? 'rounded-[3rem]' : 'rounded-full'} flex flex-col items-center justify-center mb-8 shadow-2xl animate-bounce relative`}>
                   <div className="absolute -top-12 animate-pulse">
                     <Crown className="text-yellow-400 fill-yellow-400 drop-shadow-lg w-16 h-16" />
@@ -718,23 +712,14 @@
                   </div>
                   <div className="w-24 h-12 bg-black/20 rounded-b-full relative overflow-hidden"><div className="absolute bottom-0 w-full h-4 bg-red-400"></div></div>
                 </div>
-                
-                <h2 className="text-4xl md:text-5xl font-extrabold text-purple-600 mb-6">{currentStyle.label}가 왕이 되었어요!</h2>
+                <h2 className="text-3xl md:text-5xl font-extrabold text-purple-600 mb-6">{currentStyle.label}가 왕이 되었어요!</h2>
                 <p className="text-xl text-gray-500 mb-8 font-bold">참 잘했어요! 멋진 박사님!</p>
                 <div className="flex gap-4">
-                    <button 
-                      onClick={() => setGameState('menu')}
-                      className="flex items-center space-x-2 px-8 py-4 bg-gray-800 text-white rounded-full font-bold text-xl hover:bg-gray-700 transition-colors shadow-lg active:scale-95"
-                    >
-                      <RotateCcw size={24} />
-                      <span>다시 키우기</span>
+                    <button onClick={() => setGameState('menu')} className="flex items-center space-x-2 px-6 py-3 bg-gray-800 text-white rounded-full font-bold text-lg hover:bg-gray-700 transition-colors shadow-lg active:scale-95">
+                      <RotateCcw size={20} /> <span>다시 키우기</span>
                     </button>
-                    <button 
-                      onClick={() => setGameState('characterSelect')}
-                      className="flex items-center space-x-2 px-8 py-4 bg-white text-gray-800 border-2 border-gray-200 rounded-full font-bold text-xl hover:bg-gray-50 transition-colors shadow-lg active:scale-95"
-                    >
-                      <Home size={24} />
-                      <span>다른 친구 만나기</span>
+                    <button onClick={() => setGameState('characterSelect')} className="flex items-center space-x-2 px-6 py-3 bg-white text-gray-800 border-2 border-gray-200 rounded-full font-bold text-lg hover:bg-gray-50 transition-colors shadow-lg active:scale-95">
+                      <Home size={20} /> <span>다른 친구</span>
                     </button>
                 </div>
               </div>
@@ -742,28 +727,24 @@
           }
 
           const currentData = gameQuestions[currentIdx];
-          // 뇸뇸이인 경우 prompt(TTS용)와 display(화면표시용)가 다름
           const displayPrompt = currentData.display || currentData.prompt;
           const progressPercent = (exp / maxExpPerLevel) * 100;
 
-          // 5. 게임 플레이 화면
+          // 5. 게임 플레이 화면 (반응형 텍스트 크기 적용)
           return (
             <div className={`flex flex-col h-full w-full max-w-3xl mx-auto p-4 md:p-8 rounded-3xl shadow-2xl my-4 relative overflow-hidden justify-between ${currentStyle.lightBg}`}>
-              <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-md z-10 w-full mb-4">
-                <div className="flex flex-col w-full mr-6">
+              <div className="flex justify-between items-center bg-white p-4 md:p-6 rounded-3xl shadow-md z-10 w-full mb-4">
+                <div className="flex flex-col w-full mr-4 md:mr-6">
                   <div className="flex justify-between items-end mb-2">
                     <span className="text-lg md:text-xl font-bold text-gray-600">{currentStyle.label} (Lv.{level})</span>
                     <span className="text-md md:text-lg font-bold text-gray-500">{exp} / {maxExpPerLevel}</span>
                   </div>
                   <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
-                    <div 
-                      className={`h-full ${selectedChar === 'nyam' ? 'bg-green-400' : 'bg-cyan-400'} transition-all duration-500 ease-out`}
-                      style={{ width: `${progressPercent}%` }}
-                    />
+                    <div className={`h-full ${selectedChar === 'nyam' ? 'bg-green-400' : 'bg-cyan-400'} transition-all duration-500 ease-out`} style={{ width: `${progressPercent}%` }} />
                   </div>
                 </div>
                 <button onClick={() => setGameState('menu')} className="p-3 bg-gray-100 rounded-full hover:bg-gray-200 flex-shrink-0">
-                  <Home className="text-gray-600" size={28} />
+                  <Home className="text-gray-600" size={24} />
                 </button>
               </div>
               
@@ -774,23 +755,23 @@
                   onClick={() => speakWord(currentData.prompt)}
                   className={`
                     cursor-pointer active:scale-95
-                    mb-8 bg-white px-8 py-6 rounded-3xl rounded-br-none shadow-lg border-4 border-gray-100 
+                    mb-6 bg-white px-6 py-4 md:px-8 md:py-6 rounded-3xl rounded-br-none shadow-lg border-4 border-gray-100 
                     transition-all duration-300 ${selectedChar === 'nyam' ? 'hover:border-green-300' : 'hover:border-cyan-300'} hover:shadow-xl group
                     ${monsterState === 'levelup' ? 'opacity-0' : 'opacity-100'}
                   `}
                 >
                   <div className="flex items-center justify-center space-x-3">
-                    <p className="text-3xl md:text-4xl font-bold text-gray-800 text-center break-keep">
+                    <p className="text-2xl md:text-4xl font-bold text-gray-800 text-center break-keep">
                       {monsterState === 'happy' ? (selectedChar === 'nyam' ? "우와! 꿀맛이야!" : "냠냠! 숫자 맛있어!") : displayPrompt}
                     </p>
                     {monsterState !== 'happy' && (
-                      <Volume2 className={`text-gray-400 ${selectedChar === 'nyam' ? 'group-hover:text-green-500' : 'group-hover:text-cyan-500'} transition-colors`} size={32} />
+                      <Volume2 className={`text-gray-400 ${selectedChar === 'nyam' ? 'group-hover:text-green-500' : 'group-hover:text-cyan-500'} transition-colors`} size={28} />
                     )}
                   </div>
                 </div>
 
                 <div className={`
-                  relative transition-all duration-700 ease-in-out flex flex-col items-center justify-center shadow-xl transform scale-110 md:scale-125
+                  relative transition-all duration-700 ease-in-out flex flex-col items-center justify-center shadow-xl transform scale-100 md:scale-125
                   ${currentStyle.levels[level-1].size} ${currentStyle.bg} ${selectedChar === 'nyom' ? 'rounded-[3rem] animate-jelly' : 'rounded-full'}
                   ${monsterState === 'sad' ? 'animate-shake bg-gray-400' : ''}
                   ${monsterState === 'happy' ? 'animate-bounce' : ''}
@@ -801,26 +782,15 @@
                       <Crown className="text-yellow-400 fill-yellow-400 drop-shadow-md w-12 h-12" />
                     </div>
                   )}
-
                   <div className={`flex transition-all duration-300 ${level === 1 ? 'space-x-3' : level === 2 ? 'space-x-5' : 'space-x-8'} mb-2`}>
                     {monsterState === 'happy' ? (
-                      <>
-                        <div className="text-gray-800 font-bold text-2xl md:text-4xl">^</div>
-                        <div className="text-gray-800 font-bold text-2xl md:text-4xl">^</div>
-                      </>
+                      <><div className="text-gray-800 font-bold text-2xl md:text-4xl">^</div><div className="text-gray-800 font-bold text-2xl md:text-4xl">^</div></>
                     ) : monsterState === 'sad' ? (
-                      <>
-                        <div className="text-gray-800 font-bold text-2xl md:text-4xl">{'>'}</div>
-                        <div className="text-gray-800 font-bold text-2xl md:text-4xl">{'<'}</div>
-                      </>
+                      <><div className="text-gray-800 font-bold text-2xl md:text-4xl">{'>'}</div><div className="text-gray-800 font-bold text-2xl md:text-4xl">{'<'}</div></>
                     ) : (
-                      <>
-                        <div className={`${currentStyle.eye} rounded-full`}></div>
-                        <div className={`${currentStyle.eye} rounded-full`}></div>
-                      </>
+                      <><div className={`${currentStyle.eye} rounded-full`}></div><div className={`${currentStyle.eye} rounded-full`}></div></>
                     )}
                   </div>
-
                   <div className={`
                     bg-black/20 transition-all duration-300 flex items-center justify-center overflow-hidden relative
                     ${monsterState === 'idle' ? 'w-1/3 h-2 rounded-full mt-2' : ''}
@@ -836,25 +806,28 @@
                       <div className="absolute bottom-0 w-3/4 h-1/2 bg-red-400 rounded-t-full"></div>
                     )}
                   </div>
-                  
-                  {monsterState === 'happy' && (
-                    <Heart className="absolute -top-6 -right-4 text-red-500 fill-red-500 animate-bounce w-8 h-8" />
-                  )}
+                  {monsterState === 'happy' && <Heart className="absolute -top-6 -right-4 text-red-500 fill-red-500 animate-bounce w-8 h-8" />}
                 </div>
               </div>
 
-              <div className={`w-full grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-6 transition-opacity duration-300 ${(monsterState === 'eating' || monsterState === 'levelup') ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+              <div className={`w-full grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 mt-4 md:mt-6 transition-opacity duration-300 ${(monsterState === 'eating' || monsterState === 'levelup') ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 {currentData.options.map((word, index) => {
                   const isWrong = wrongWord === word;
+                  // [수정] 텍스트 크기 분기 처리 (냠냠이는 조금 작게, 뇸뇸이는 크게)
+                  const textSizeClass = selectedChar === 'nyam' 
+                    ? 'text-2xl md:text-4xl break-keep leading-tight' // 한글 줄바꿈 허용
+                    : 'text-3xl md:text-5xl'; // 숫자는 큼직하게
+                  
                   return (
                     <button
                       key={`${currentIdx}-${index}`}
                       onClick={() => handleFeed(word)}
                       disabled={monsterState !== 'idle' && monsterState !== 'sad'}
                       className={`
-                        relative p-6 md:p-8 rounded-3xl font-bold text-3xl md:text-5xl shadow-md transition-all duration-300
-                        bg-white text-gray-700 border-b-8 border-gray-200
+                        relative p-4 md:p-8 rounded-2xl md:rounded-3xl font-bold shadow-md transition-all duration-300 flex items-center justify-center min-h-[80px] md:min-h-[100px]
+                        bg-white text-gray-700 border-b-4 md:border-b-8 border-gray-200
                         hover:scale-105 active:border-b-0 active:translate-y-2
+                        ${textSizeClass}
                         ${selectedChar === 'nyam' ? 'hover:bg-green-50' : 'hover:bg-cyan-50'}
                         ${isWrong ? 'bg-red-100 text-red-500 border-red-300 animate-shake' : ''}
                       `}
