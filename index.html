@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>냠냠이와 뇸뇸이 키우기</title>
     
     <!-- 1. Tailwind CSS -->
@@ -48,8 +48,8 @@
         .animate-levelup { animation: levelUpGlow 2s ease-in-out; }
     </style>
 </head>
-<body class="bg-amber-50 selection:bg-green-200">
-    <div id="root"></div>
+<body class="bg-slate-100 selection:bg-green-200 h-screen overflow-hidden flex items-center justify-center">
+    <div id="root" class="w-full h-full"></div>
 
     <script type="text/babel">
         const { useState, useEffect, useCallback, useRef } = React;
@@ -74,98 +74,198 @@
 
         // --- [1. 데이터 및 로직] ---
         
-        // 1-A. 냠냠이 (단어) 데이터
+        // 1-A. 냠냠이 (단어) 데이터 - 3배 증량 (약 45~50개/레벨)
         const WORD_DATA = {
-          level1: [ 
+          level1: [ // 소리와 모양 -> 단어 (명사 위주)
             { prompt: "'멍멍' 짖는 동물은?", answer: "강아지", options: ["강아지", "고양이", "병아리"] },
             { prompt: "'야옹' 우는 동물은?", answer: "고양이", options: ["고양이", "강아지", "호랑이"] },
             { prompt: "'꿀꿀' 소리 내는 동물!", answer: "돼지", options: ["돼지", "소", "말"] },
+            { prompt: "'음매' 우는 동물은?", answer: "소", options: ["소", "돼지", "닭"] },
+            { prompt: "'꼬끼오' 아침을 깨워요!", answer: "닭", options: ["닭", "참새", "비둘기"] },
+            { prompt: "'매앰매앰' 여름에 울어요", answer: "매미", options: ["매미", "잠자리", "나비"] },
+            { prompt: "'짹짹' 작은 새", answer: "참새", options: ["참새", "독수리", "오리"] },
+            { prompt: "'뒤뚱뒤뚱' 걷는 새", answer: "오리", options: ["오리", "닭", "타조"] },
+            { prompt: "'어흥' 무서운 동물", answer: "호랑이", options: ["호랑이", "토끼", "다람쥐"] },
             { prompt: "'깡충깡충' 뛰는 동물?", answer: "토끼", options: ["토끼", "거북이", "사자"] },
             { prompt: "'엉금엉금' 기어가는 동물!", answer: "거북이", options: ["거북이", "토끼", "뱀"] },
+            { prompt: "'찍찍' 치즈를 좋아해요", answer: "쥐", options: ["쥐", "고양이", "코끼리"] },
+            { prompt: "'뿌우' 코가 긴 동물", answer: "코끼리", options: ["코끼리", "기린", "하마"] },
+            { prompt: "목이 '길쭉길쭉'한 동물", answer: "기린", options: ["기린", "사슴", "말"] },
+            { prompt: "'개굴개굴' 노래해요", answer: "개구리", options: ["개구리", "매미", "귀뚜라미"] },
+            
             { prompt: "하늘을 '슈웅' 날아요!", answer: "비행기", options: ["비행기", "자동차", "배"] },
             { prompt: "기찻길을 '칙칙폭폭'!", answer: "기차", options: ["기차", "자전거", "버스"] },
+            { prompt: "'부릉부릉' 도로를 달려요", answer: "자동차", options: ["자동차", "비행기", "배"] },
+            { prompt: "'따르릉' 페달을 밟아요", answer: "자전거", options: ["자전거", "오토바이", "킥보드"] },
+            { prompt: "'둥둥' 물 위에 떠요", answer: "배", options: ["배", "잠수함", "비행기"] },
+            { prompt: "'삐뽀삐뽀' 아픈 사람 도와줘요!", answer: "구급차", options: ["구급차", "경찰차", "소방차"] },
+            { prompt: "'애앵애앵' 불을 꺼줘요!", answer: "소방차", options: ["소방차", "구급차", "택시"] },
+            { prompt: "'위잉위잉' 도둑을 잡아요", answer: "경찰차", options: ["경찰차", "쓰레기차", "트럭"] },
+            
             { prompt: "맛있는 '빨간색' 과일!", answer: "사과", options: ["사과", "바나나", "포도"] },
             { prompt: "길쭉길쭉 '노란색' 과일!", answer: "바나나", options: ["바나나", "사과", "수박"] },
+            { prompt: "'주렁주렁' 보라색 과일", answer: "포도", options: ["포도", "딸기", "귤"] },
+            { prompt: "'동글동글' 주황색 과일", answer: "귤", options: ["귤", "메론", "복숭아"] },
+            { prompt: "'콕콕' 씨가 박힌 빨간 과일", answer: "딸기", options: ["딸기", "토마토", "체리"] },
+            { prompt: "'아삭아삭' 시원한 여름 과일", answer: "수박", options: ["수박", "참외", "파인애플"] },
+            { prompt: "'털이 보송보송' 분홍 과일", answer: "복숭아", options: ["복숭아", "자두", "살구"] },
+
             { prompt: "비가 올 때 '활짝' 펼쳐요!", answer: "우산", options: ["우산", "모자", "가방"] },
             { prompt: "발에 '쏙' 신어요!", answer: "신발", options: ["신발", "장갑", "모자"] },
+            { prompt: "손에 '끼우는' 따뜻한 것", answer: "장갑", options: ["장갑", "양말", "목도리"] },
+            { prompt: "목에 '두르는' 따뜻한 것", answer: "목도리", options: ["목도리", "모자", "귀마개"] },
+            { prompt: "머리에 '폭' 써요!", answer: "모자", options: ["모자", "양말", "바지"] },
+            { prompt: "다리에 '입는' 옷", answer: "바지", options: ["바지", "치마", "티셔츠"] },
+            { prompt: "'빙글빙글' 도는 치마", answer: "치마", options: ["치마", "바지", "조끼"] },
+            
             { prompt: "손을 '뽀득뽀득' 씻어요!", answer: "비누", options: ["비누", "치약", "샴푸"] },
             { prompt: "이를 '치카치카' 닦아요!", answer: "칫솔", options: ["칫솔", "비누", "수건"] },
+            { prompt: "머리를 '감는' 거품", answer: "샴푸", options: ["샴푸", "로션", "치약"] },
+            { prompt: "몸을 '닦는' 부드러운 천", answer: "수건", options: ["수건", "이불", "옷"] },
+            
             { prompt: "밤에 '쿨쿨' 자요!", answer: "침대", options: ["침대", "책상", "의자"] },
+            { prompt: "책을 '반듯하게' 펴요!", answer: "책상", options: ["책상", "침대", "냉장고"] },
+            { prompt: "'엉덩이'를 붙이고 앉아요", answer: "의자", options: ["의자", "식탁", "소파"] },
+            { prompt: "텔레비전을 보는 곳!", answer: "거실", options: ["거실", "부엌", "화장실"] },
             { prompt: "음식을 '보글보글' 요리해요!", answer: "부엌", options: ["부엌", "안방", "현관"] },
+            { prompt: "응가와 쉬를 해요", answer: "화장실", options: ["화장실", "베란다", "거실"] },
+            { prompt: "집에 들어오는 문", answer: "현관", options: ["현관", "창문", "벽"] }
           ],
-          level2: [ 
+          level2: [ // 반대말
             { prompt: "아이스크림은 '차갑다'! 반대는?", answer: "뜨겁다", options: ["뜨겁다", "작다", "멀다"] },
+            { prompt: "불은 '뜨겁다'! 반대는?", answer: "차갑다", options: ["차갑다", "미지근하다", "맵다"] },
             { prompt: "코끼리는 '크다'! 반대는?", answer: "작다", options: ["많다", "작다", "높다"] },
+            { prompt: "개미는 '작다'! 반대는?", answer: "크다", options: ["크다", "길다", "넓다"] },
             { prompt: "기차는 '길다'! 반대는?", answer: "짧다", options: ["넓다", "짧다", "무겁다"] },
+            { prompt: "몽당연필은 '짧다'! 반대는?", answer: "길다", options: ["길다", "크다", "높다"] },
             { prompt: "사탕이 '많다'! 반대는?", answer: "적다", options: ["적다", "크다", "높다"] },
+            { prompt: "친구들이 '적다'! 반대는?", answer: "많다", options: ["많다", "넓다", "깊다"] },
+            
             { prompt: "비행기는 '높다'! 반대는?", answer: "낮다", options: ["깊다", "낮다", "멀다"] },
             { prompt: "거북이는 '느리다'! 반대는?", answer: "빠르다", options: ["빠르다", "약하다", "순하다"] },
+            { prompt: "치타는 '빠르다'! 반대는?", answer: "느리다", options: ["느리다", "급하다", "바쁘다"] },
             { prompt: "깃털은 '가볍다'! 반대는?", answer: "무겁다", options: ["무겁다", "어둡다", "즐겁다"] },
+            { prompt: "바위는 '무겁다'! 반대는?", answer: "가볍다", options: ["가볍다", "작다", "얇다"] },
             { prompt: "밤은 '어둡다'! 반대는?", answer: "밝다", options: ["밝다", "검다", "붉다"] },
+            { prompt: "낮은 '밝다'! 반대는?", answer: "어둡다", options: ["어둡다", "흐리다", "멀다"] },
             { prompt: "겨울은 '춥다'! 반대는?", answer: "덥다", options: ["덥다", "시원하다", "따뜻하다"] },
+            { prompt: "여름은 '덥다'! 반대는?", answer: "춥다", options: ["춥다", "서늘하다", "맑다"] },
+            
             { prompt: "이 문제는 '쉽다'! 반대는?", answer: "어렵다", options: ["어렵다", "재밌다", "지루하다"] },
             { prompt: "'앞'으로 가자! 반대는?", answer: "뒤", options: ["옆", "위", "뒤"] },
+            { prompt: "'뒤'를 돌아봐! 반대는?", answer: "앞", options: ["앞", "옆", "밑"] },
             { prompt: "집 '안'에 있어! 반대는?", answer: "밖", options: ["밖", "속", "겉"] },
+            { prompt: "집 '밖'에서 놀자! 반대는?", answer: "안", options: ["안", "옆", "사이"] },
+            { prompt: "'위'를 쳐다봐! 반대는?", answer: "아래", options: ["아래", "중간", "끝"] },
             { prompt: "학교에 '가다'! 반대는?", answer: "오다", options: ["오다", "자다", "놀다"] },
             { prompt: "자리에 '서다'! 반대는?", answer: "앉다", options: ["앉다", "눕다", "걷다"] },
+            { prompt: "의자에 '앉다'! 반대는?", answer: "서다", options: ["서다", "뛰다", "자다"] },
             { prompt: "문을 '열다'! 반대는?", answer: "닫다", options: ["닫다", "깨다", "밀다"] },
+            { prompt: "창문을 '닫다'! 반대는?", answer: "열다", options: ["열다", "부수다", "막다"] },
+            { prompt: "장난감을 '밀다'! 반대는?", answer: "당기다", options: ["잡다", "놓다", "당기다"] },
+            { prompt: "줄을 '당기다'! 반대는?", answer: "밀다", options: ["밀다", "끊다", "매다"] },
+            
+            { prompt: "선물 받아서 '기쁘다'! 반대는?", answer: "슬프다", options: ["화나다", "슬프다", "졸리다"] },
+            { prompt: "인형을 잃어버려서 '슬프다'! 반대는?", answer: "기쁘다", options: ["기쁘다", "아프다", "무섭다"] },
+            { prompt: "손이 '깨끗하다'! 반대는?", answer: "더럽다", options: ["더럽다", "맑다", "예쁘다"] },
+            { prompt: "옷이 '더럽다'! 반대는?", answer: "깨끗하다", options: ["깨끗하다", "새롭다", "헌것이다"] },
+            { prompt: "돌은 '딱딱하다'! 반대는?", answer: "말랑하다", options: ["말랑하다", "뾰족하다", "거칠다"] },
+            { prompt: "젤리는 '말랑하다'! 반대는?", answer: "딱딱하다", options: ["딱딱하다", "부드럽다", "질기다"] },
+            { prompt: "친구가 '좋다'! 반대는?", answer: "싫다", options: ["싫다", "나쁘다", "밉다"] },
+            { prompt: "그림 그리기는 '재밌다'! 반대는?", answer: "지루하다", options: ["지루하다", "신나다", "즐겁다"] }
           ],
-          level3: [ 
+          level3: [ // 문장 완성 (주어/목적어 + 서술어)
             { prompt: "'나비가' 팔랑팔랑~", answer: "날아요", options: ["날아요", "헤엄쳐요", "굴러가요"] },
             { prompt: "'물고기가' 물속에서~", answer: "헤엄쳐요", options: ["걸어요", "헤엄쳐요", "날아요"] },
             { prompt: "'아기가' 응애응애!", answer: "울어요", options: ["울어요", "웃어요", "자요"] },
+            { prompt: "'친구가' 하하하!", answer: "웃어요", options: ["웃어요", "울어요", "화내요"] },
             { prompt: "'새가' 짹짹짹!", answer: "노래해요", options: ["기어요", "노래해요", "뛰어요"] },
             { prompt: "'개구리가' 폴짝!", answer: "뛰어요", options: ["자요", "뛰어요", "먹어요"] },
             { prompt: "'바람이' 쌩쌩~", answer: "불어요", options: ["불어요", "멈춰요", "사라져요"] },
+            { prompt: "'눈이' 펑펑~", answer: "내려요", options: ["내려요", "올라가요", "그쳐요"] },
             { prompt: "'꽃이' 예쁘게~", answer: "피어요", options: ["져요", "피어요", "죽어요"] },
-            { prompt: "'비가' 주룩주룩~", answer: "내려요", options: ["올라가요", "내려요", "돌아요"] },
+            { prompt: "'해가' 아침에~", answer: "떴어요", options: ["졌어요", "떴어요", "숨었어요"] },
+            { prompt: "'달이' 밤에~", answer: "비쳐요", options: ["비쳐요", "자요", "울어요"] },
+            
             { prompt: "'사과를' 냠냠!", answer: "먹어요", options: ["먹어요", "마셔요", "입어요"] },
             { prompt: "'우유를' 꿀꺽꿀꺽!", answer: "마셔요", options: ["씹어요", "마셔요", "던져요"] },
             { prompt: "'공을' 뻥!", answer: "차요", options: ["차요", "먹어요", "입어요"] },
             { prompt: "'그림을' 쓱쓱!", answer: "그려요", options: ["지워요", "그려요", "부숴요"] },
             { prompt: "'노래를' 랄랄라~", answer: "불러요", options: ["들어요", "불러요", "봐요"] },
+            { prompt: "'춤을' 신나게~", answer: "춰요", options: ["춰요", "걸어요", "앉아요"] },
+            
             { prompt: "'책을' 재미있게~", answer: "읽어요", options: ["읽어요", "찢어요", "덮어요"] },
             { prompt: "'옷을' 예쁘게~", answer: "입어요", options: ["벗어요", "입어요", "접어요"] },
+            { prompt: "'신발을' 신고~", answer: "신어요", options: ["신어요", "써요", "껴요"] },
+            { prompt: "'모자를' 머리에~", answer: "써요", options: ["써요", "입어요", "신어요"] },
+            { prompt: "'양말을' 발에~", answer: "신어요", options: ["신어요", "걸어요", "입어요"] },
+            { prompt: "'장갑을' 손에~", answer: "껴요", options: ["껴요", "신어요", "입어요"] },
+            
+            { prompt: "'잠을' 쿨쿨~", answer: "자요", options: ["자요", "깨요", "놀아요"] },
+            { prompt: "'아침에' 일찍~", answer: "일어나요", options: ["일어나요", "자요", "누워요"] },
+            { prompt: "'세수를' 어푸어푸~", answer: "해요", options: ["해요", "가요", "봐요"] },
+            { prompt: "'이빨을' 치카치카~", answer: "닦아요", options: ["닦아요", "씻어요", "빨아요"] },
+            { prompt: "'손을' 깨끗이~", answer: "씻어요", options: ["씻어요", "만져요", "때려요"] },
+            
+            { prompt: "'친구와' 사이좋게~", answer: "놀아요", options: ["놀아요", "싸워요", "밀어요"] },
+            { prompt: "'엄마를' 사랑~", answer: "해요", options: ["해요", "미워해요", "싫어해요"] },
+            { prompt: "'전화를' 여보세요?", answer: "받아요", options: ["받아요", "걸어요", "끊어요"] },
+            { prompt: "'버스를' 정류장에서~", answer: "타요", options: ["타요", "밀어요", "봐요"] },
+            { prompt: "'숙제를' 열심히~", answer: "해요", options: ["해요", "놀아요", "자요"] },
+            { prompt: "'청소를' 깨끗하게~", answer: "해요", options: ["해요", "어질러요", "버려요"] }
           ]
         };
 
-        // 1-B. 뇸뇸이 (수학) 문제 생성기
+        // 1-B. 뇸뇸이 (수학) 문제 생성기 - 로직 수정
         const generateMathQuestion = (level) => {
             let a, b, answer, prompt, op;
             
             if (level === 1) {
-                // 한자리 더하기
-                a = Math.floor(Math.random() * 9) + 1; // 1~9
-                b = Math.floor(Math.random() * (10 - a)); // 합이 10 미만
-                if (b === 0) b = 1;
-                answer = a + b;
-                prompt = `${a} 더하기 ${b}은?`;
-                op = "+";
-            } else if (level === 2) {
-                // 한자리 빼기
-                a = Math.floor(Math.random() * 9) + 1; // 1~9
-                b = Math.floor(Math.random() * a); // a보다 작거나 같음 (음수 방지)
+                // 1) 레벨 1: 한자리 - 한자리 = 한자리 (0 빼기 제외)
+                // a: 1~9 (결과가 양수여야 하므로 0은 제외)
+                a = Math.floor(Math.random() * 9) + 1; 
+                // b: 1~a (결과가 0 이상이어야 함, 0을 빼는건 제외하므로 최소 1)
+                b = Math.floor(Math.random() * a) + 1; 
+                
                 answer = a - b;
                 prompt = `${a} 빼기 ${b}는?`;
                 op = "-";
-            } else {
-                // 두자리 더하기 (합 100 미만)
-                a = Math.floor(Math.random() * 80) + 10; // 10~89
-                b = Math.floor(Math.random() * (100 - a)); 
-                if (b === 0) b = 5;
+            } else if (level === 2) {
+                // 2) 레벨 2: 한자리 + 한자리 = 두자리 (합이 10 이상)
+                do {
+                    a = Math.floor(Math.random() * 9) + 1; // 1~9
+                    b = Math.floor(Math.random() * 9) + 1; // 1~9
+                } while (a + b < 10);
+                
                 answer = a + b;
                 prompt = `${a} 더하기 ${b}은?`;
                 op = "+";
+            } else {
+                // 3) 레벨 3: 두자리 - 한자리 = 한자리 (결과가 10 미만)
+                do {
+                    a = Math.floor(Math.random() * 9) + 10; // 10~18 (최대 18이어야 한자리 빼서 한자리가 나옴)
+                    b = Math.floor(Math.random() * 9) + 1;  // 1~9
+                } while (a - b >= 10 || a - b < 0);
+
+                answer = a - b;
+                prompt = `${a} 빼기 ${b}는?`;
+                op = "-";
             }
 
             // 오답 생성 (정답 근처의 숫자들)
             let options = new Set([answer]);
-            while (options.size < 3) {
+            let attempts = 0;
+            while (options.size < 3 && attempts < 20) {
                 let offset = Math.floor(Math.random() * 5) - 2; // -2 ~ +2
                 let fake = answer + offset;
                 if (fake >= 0 && fake !== answer) {
                     options.add(fake);
                 }
+                attempts++;
+            }
+            // 만약 오답이 부족하면 강제로 추가
+            while (options.size < 3) {
+                options.add(Math.floor(Math.random() * 20));
             }
             
             // 옵션 섞기 및 문자열 변환
@@ -211,7 +311,7 @@
           const [currentIdx, setCurrentIdx] = useState(0);
           const [level, setLevel] = useState(1);
           const [exp, setExp] = useState(0); 
-          const maxExpPerLevel = 20; 
+          const maxExpPerLevel = 10; 
 
           const [monsterState, setMonsterState] = useState('idle'); 
           const [swallowedWord, setSwallowedWord] = useState('');
@@ -223,7 +323,7 @@
           const [audioLog, setAudioLog] = useState([]);
           const audioRef = useRef(null);
 
-          // 스타일 정의
+          // 스타일 정의 (뇸뇸이 설명 업데이트)
           const getStyles = () => {
               if (selectedChar === 'nyam') {
                   return {
@@ -249,15 +349,17 @@
                       shape: "rounded-[3rem] w-28 h-40 animate-jelly", // 길쭉한 모양
                       eye: "w-3 h-5 bg-white", // 눈 모양도 조금 다르게
                       levels: [
-                          { size: 'w-28 h-40', desc: '한자리 더하기' },
-                          { size: 'w-36 h-52', desc: '한자리 빼기' },
-                          { size: 'w-48 h-64', desc: '두자리 더하기' }
+                          { size: 'w-28 h-40', desc: '한자리 빼기' },
+                          { size: 'w-36 h-52', desc: '두자리 만들기 더하기' },
+                          { size: 'w-48 h-64', desc: '한자리 만들기 빼기' }
                       ]
                   };
               }
           };
           const currentStyle = getStyles();
 
+          // ... (나머지 코드는 동일)
+          
           const addLog = (msg) => {
              const time = new Date().toLocaleTimeString();
              setAudioLog(prev => [`[${time}] ${msg}`, ...prev].slice(0, 5));
@@ -328,7 +430,7 @@
                 else questions = [...shuffleArray(WORD_DATA.level3)];
                 return questions.map(shuffleOptions);
             } else {
-                // 뇸뇸이 (수학) - 레벨마다 20개씩 생성
+                // 뇸뇸이 (수학)
                 const l1 = generateMathPool(1, 20);
                 const l2 = generateMathPool(2, 20);
                 const l3 = generateMathPool(3, 20);
@@ -502,7 +604,7 @@
           // 1. 캐릭터 선택 화면 (최초 화면)
           if (gameState === 'characterSelect') {
               return (
-                  <div className="flex flex-col items-center justify-center min-h-screen font-sans p-6 rounded-2xl relative bg-amber-50">
+                  <div className="flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 relative">
                       {renderOverlayControls()}
                       <h1 className="text-3xl md:text-5xl font-extrabold text-gray-800 mb-8 tracking-tight">누구를 키워볼까요?</h1>
                       
@@ -534,7 +636,7 @@
           // 2. 메인 메뉴 (캐릭터 선택 후)
           if (gameState === 'menu') {
             return (
-              <div className={`flex flex-col items-center justify-center min-h-screen font-sans p-6 rounded-2xl relative ${currentStyle.lightBg}`}>
+              <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 relative ${currentStyle.lightBg}`}>
                 {renderOverlayControls()}
                 
                 <div className="absolute top-6 left-6">
@@ -572,7 +674,7 @@
           // 3. 레벨 선택
           if (gameState === 'levelSelect') {
             return (
-                <div className={`flex flex-col items-center justify-center min-h-screen font-sans p-6 rounded-2xl ${currentStyle.lightBg}`}>
+                <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 ${currentStyle.lightBg}`}>
                     {renderOverlayControls()}
                     <h2 className="text-3xl font-extrabold text-gray-800 mb-8">몇 단계부터 시작할까요?</h2>
                     
@@ -602,7 +704,7 @@
           // 4. 클리어 화면
           if (gameState === 'clear') {
             return (
-              <div className="flex flex-col items-center justify-center min-h-screen font-sans p-6 rounded-2xl text-center bg-purple-50">
+              <div className="flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 text-center bg-purple-50">
                 {renderOverlayControls()}
                 <Sparkles className="text-purple-400 w-16 h-16 mb-6 animate-spin-slow" />
                 
@@ -646,49 +748,49 @@
 
           // 5. 게임 플레이 화면
           return (
-            <div className={`flex flex-col min-h-screen font-sans p-4 rounded-2xl relative overflow-hidden ${currentStyle.lightBg}`}>
-              <div className="flex justify-between items-center bg-white p-4 rounded-3xl shadow-sm z-10">
-                <div className="flex flex-col w-full mr-4">
-                  <div className="flex justify-between items-end mb-1">
-                    <span className="text-sm font-bold text-gray-500">{currentStyle.label} (Lv.{level})</span>
-                    <span className="text-xs font-bold text-gray-400">{exp} / {maxExpPerLevel}</span>
+            <div className={`flex flex-col h-full w-full max-w-3xl mx-auto p-4 md:p-8 rounded-3xl shadow-2xl my-4 relative overflow-hidden justify-between ${currentStyle.lightBg}`}>
+              <div className="flex justify-between items-center bg-white p-6 rounded-3xl shadow-md z-10 w-full mb-4">
+                <div className="flex flex-col w-full mr-6">
+                  <div className="flex justify-between items-end mb-2">
+                    <span className="text-lg md:text-xl font-bold text-gray-600">{currentStyle.label} (Lv.{level})</span>
+                    <span className="text-md md:text-lg font-bold text-gray-500">{exp} / {maxExpPerLevel}</span>
                   </div>
-                  <div className="w-full h-3 bg-gray-200 rounded-full overflow-hidden">
+                  <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
                     <div 
                       className={`h-full ${selectedChar === 'nyam' ? 'bg-green-400' : 'bg-cyan-400'} transition-all duration-500 ease-out`}
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
                 </div>
-                <button onClick={() => setGameState('menu')} className="p-2 bg-gray-100 rounded-full hover:bg-gray-200 flex-shrink-0">
-                  <Home className="text-gray-600" size={24} />
+                <button onClick={() => setGameState('menu')} className="p-3 bg-gray-100 rounded-full hover:bg-gray-200 flex-shrink-0">
+                  <Home className="text-gray-600" size={28} />
                 </button>
               </div>
               
               {renderOverlayControls()}
 
-              <div className="flex-1 flex flex-col items-center justify-center w-full relative">
+              <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-0">
                 <div 
                   onClick={() => speakWord(currentData.prompt)}
                   className={`
                     cursor-pointer active:scale-95
-                    mb-8 bg-white px-6 py-4 rounded-3xl rounded-br-none shadow-md border-2 border-gray-100 
-                    transition-all duration-300 ${selectedChar === 'nyam' ? 'hover:border-green-300' : 'hover:border-cyan-300'} hover:shadow-lg group
+                    mb-8 bg-white px-8 py-6 rounded-3xl rounded-br-none shadow-lg border-4 border-gray-100 
+                    transition-all duration-300 ${selectedChar === 'nyam' ? 'hover:border-green-300' : 'hover:border-cyan-300'} hover:shadow-xl group
                     ${monsterState === 'levelup' ? 'opacity-0' : 'opacity-100'}
                   `}
                 >
-                  <div className="flex items-center justify-center space-x-2">
-                    <p className="text-2xl md:text-3xl font-bold text-gray-800 text-center break-keep">
+                  <div className="flex items-center justify-center space-x-3">
+                    <p className="text-3xl md:text-4xl font-bold text-gray-800 text-center break-keep">
                       {monsterState === 'happy' ? (selectedChar === 'nyam' ? "우와! 꿀맛이야!" : "냠냠! 숫자 맛있어!") : displayPrompt}
                     </p>
                     {monsterState !== 'happy' && (
-                      <Volume2 className={`text-gray-400 ${selectedChar === 'nyam' ? 'group-hover:text-green-500' : 'group-hover:text-cyan-500'} transition-colors`} size={24} />
+                      <Volume2 className={`text-gray-400 ${selectedChar === 'nyam' ? 'group-hover:text-green-500' : 'group-hover:text-cyan-500'} transition-colors`} size={32} />
                     )}
                   </div>
                 </div>
 
                 <div className={`
-                  relative transition-all duration-700 ease-in-out flex flex-col items-center justify-center shadow-xl
+                  relative transition-all duration-700 ease-in-out flex flex-col items-center justify-center shadow-xl transform scale-110 md:scale-125
                   ${currentStyle.levels[level-1].size} ${currentStyle.bg} ${selectedChar === 'nyom' ? 'rounded-[3rem] animate-jelly' : 'rounded-full'}
                   ${monsterState === 'sad' ? 'animate-shake bg-gray-400' : ''}
                   ${monsterState === 'happy' ? 'animate-bounce' : ''}
@@ -741,7 +843,7 @@
                 </div>
               </div>
 
-              <div className={`w-full grid grid-cols-1 md:grid-cols-3 gap-4 mt-auto transition-opacity duration-300 ${(monsterState === 'eating' || monsterState === 'levelup') ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
+              <div className={`w-full grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 mt-6 transition-opacity duration-300 ${(monsterState === 'eating' || monsterState === 'levelup') ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 {currentData.options.map((word, index) => {
                   const isWrong = wrongWord === word;
                   return (
@@ -750,7 +852,7 @@
                       onClick={() => handleFeed(word)}
                       disabled={monsterState !== 'idle' && monsterState !== 'sad'}
                       className={`
-                        relative p-6 rounded-3xl font-bold text-3xl md:text-4xl shadow-md transition-all duration-300
+                        relative p-6 md:p-8 rounded-3xl font-bold text-3xl md:text-5xl shadow-md transition-all duration-300
                         bg-white text-gray-700 border-b-8 border-gray-200
                         hover:scale-105 active:border-b-0 active:translate-y-2
                         ${selectedChar === 'nyam' ? 'hover:bg-green-50' : 'hover:bg-cyan-50'}
