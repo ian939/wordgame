@@ -46,6 +46,23 @@
             100% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); transform: scale(1); }
         }
         .animate-levelup { animation: levelUpGlow 2s ease-in-out; }
+
+        /* [추가] 미니게임용 둥둥 떠다니기 애니메이션 */
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            25% { transform: translateY(-15px) translateX(10px); }
+            50% { transform: translateY(0) translateX(20px); }
+            75% { transform: translateY(15px) translateX(10px); }
+        }
+        .animate-float { animation: float 4s infinite ease-in-out; }
+
+        /* [추가] 터질 때 애니메이션 */
+        @keyframes pop {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.4); opacity: 0.8; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        .animate-pop { animation: pop 0.3s ease-out forwards; }
     </style>
 </head>
 <body class="bg-slate-100 selection:bg-green-200 h-screen overflow-hidden flex items-center justify-center">
@@ -54,7 +71,6 @@
     <script type="text/babel">
         const { useState, useEffect, useCallback, useRef } = React;
 
-        // [수정] 레벨당 문제 수 상수 정의 (레벨업 기준과 동일하게 맞춤)
         const QUESTIONS_PER_LEVEL = 10;
 
         // --- 아이콘 (SVG) ---
@@ -79,7 +95,7 @@
         
         // 1-A. 냠냠이 (단어) 데이터
         const WORD_DATA = {
-          level1: [ // 소리와 모양 -> 단어 (명사 위주)
+          level1: [ 
             { prompt: "'멍멍' 짖는 동물은?", answer: "강아지", options: ["강아지", "고양이", "병아리"] },
             { prompt: "'야옹' 우는 동물은?", answer: "고양이", options: ["고양이", "강아지", "호랑이"] },
             { prompt: "'꿀꿀' 소리 내는 동물!", answer: "돼지", options: ["돼지", "소", "말"] },
@@ -219,34 +235,29 @@
           ]
         };
 
-        // 1-B. 뇸뇸이 (수학) 문제 생성기 - 로직 수정
+        // 1-B. 뇸뇸이 (수학) 문제 생성기
         const generateMathQuestion = (level) => {
             let a, b, answer, prompt, op;
             
             if (level === 1) {
-                // 1) 레벨 1: 한자리 - 한자리 = 한자리 (0 빼기 제외)
                 a = Math.floor(Math.random() * 9) + 1; 
                 b = Math.floor(Math.random() * a) + 1; 
                 answer = a - b;
                 prompt = `${a} 빼기 ${b}는?`;
                 op = "-";
             } else if (level === 2) {
-                // 2) 레벨 2: 한자리 + 한자리 = 두자리 (합이 10 이상)
                 do {
                     a = Math.floor(Math.random() * 9) + 1; // 1~9
                     b = Math.floor(Math.random() * 9) + 1; // 1~9
                 } while (a + b < 10);
-                
                 answer = a + b;
                 prompt = `${a} 더하기 ${b}은?`;
                 op = "+";
             } else {
-                // 3) 레벨 3: 두자리 - 한자리 = 한자리 (결과가 10 미만)
                 do {
                     a = Math.floor(Math.random() * 9) + 10; // 10~18 
                     b = Math.floor(Math.random() * 9) + 1;  // 1~9
                 } while (a - b >= 10 || a - b < 0);
-
                 answer = a - b;
                 prompt = `${a} 빼기 ${b}는?`;
                 op = "-";
@@ -301,7 +312,7 @@
 
         // --- 메인 앱 컴포넌트 ---
         function WordTamagotchi() {
-          const [gameState, setGameState] = useState('characterSelect'); 
+          const [gameState, setGameState] = useState('characterSelect'); // 'characterSelect', 'menu', 'levelSelect', 'playing', 'digesting', 'clear'
           const [selectedChar, setSelectedChar] = useState('nyam'); 
           
           const [gameQuestions, setGameQuestions] = useState([]);
@@ -319,6 +330,10 @@
           const [audioPath, setAudioPath] = useState(''); 
           const [audioLog, setAudioLog] = useState([]);
           const audioRef = useRef(null);
+
+          // [추가] 미니게임용 상태
+          const [collectedWords, setCollectedWords] = useState([]);
+          const [digestBubbles, setDigestBubbles] = useState([]);
 
           const getStyles = () => {
               if (selectedChar === 'nyam') {
@@ -358,6 +373,7 @@
              setAudioLog(prev => [`[${time}] ${msg}`, ...prev].slice(0, 5));
           };
 
+          // 오디오 관련 코드들 (생략하지 않고 유지)
           useEffect(() => {
             const audio = new Audio();
             audioRef.current = audio;
@@ -421,11 +437,9 @@
 
           const changePath = (newPath) => setAudioPath(newPath);
 
-          // [수정] 게임 데이터 생성 로직 변경: 레벨별 10개씩만 정확하게 자르기
           const prepareGameData = (char, startLevel) => {
             let questions = [];
             if (char === 'nyam') {
-                // 한글 냠냠이: 각 레벨에서 정확히 10문제씩만 가져옴
                 const l1 = shuffleArray(WORD_DATA.level1).slice(0, QUESTIONS_PER_LEVEL);
                 const l2 = shuffleArray(WORD_DATA.level2).slice(0, QUESTIONS_PER_LEVEL);
                 const l3 = shuffleArray(WORD_DATA.level3).slice(0, QUESTIONS_PER_LEVEL);
@@ -436,7 +450,6 @@
                 
                 return questions.map(shuffleOptions);
             } else {
-                // 수학 뇸뇸이: 각 레벨에서 정확히 10문제씩만 생성
                 const l1 = generateMathPool(1, QUESTIONS_PER_LEVEL);
                 const l2 = generateMathPool(2, QUESTIONS_PER_LEVEL);
                 const l3 = generateMathPool(3, QUESTIONS_PER_LEVEL);
@@ -495,6 +508,15 @@
                 gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.6);
                 osc.start(now);
                 osc.stop(now + 0.6);
+              } else if (type === 'pop') {
+                // [추가] 터지는 소리
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(800, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
+                gainNode.gain.setValueAtTime(0.3, now);
+                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                osc.start(now);
+                osc.stop(now + 0.1);
               }
             } catch (e) { console.log("Audio API issue"); }
           }, []);
@@ -523,6 +545,7 @@
             setLevel(startLevel);
             setExp(0);
             setMonsterState('idle');
+            setCollectedWords([]); // [추가] 수집 단어 초기화
             setGameState('playing');
           };
 
@@ -538,6 +561,9 @@
               setSwallowedWord(selectedOption);
               playSound('eat');
               
+              // [추가] 정답 단어 수집
+              setCollectedWords(prev => [...prev, selectedOption]);
+              
               setTimeout(() => {
                 setMonsterState('happy');
                 playSound('happy');
@@ -548,7 +574,8 @@
 
                 setTimeout(() => {
                   if (newExp >= maxExpPerLevel) {
-                    handleLevelUp();
+                    // [수정] 레벨업 대신 소화시키기 미니게임 시작
+                    startDigestion();
                   } else {
                     nextQuestion();
                   }
@@ -566,7 +593,39 @@
             }
           };
 
-          const handleLevelUp = () => {
+          // [추가] 소화시키기 미니게임 시작 함수
+          const startDigestion = () => {
+              // 수집된 단어들로 방울 생성
+              const newBubbles = collectedWords.map((word, i) => ({
+                  id: i,
+                  word: word,
+                  x: Math.random() * 70 + 5, // 5~75%
+                  y: Math.random() * 60 + 10, // 10~70%
+                  size: Math.random() * 40 + 80, // 80~120px
+                  speed: Math.random() * 2 + 3 + 's', // 3~5s duration
+                  delay: Math.random() * 2 + 's'
+              }));
+              
+              setDigestBubbles(newBubbles);
+              setGameState('digesting');
+              speakWord("배가 너무 불러요! 방울을 터트려서 소화시켜주세요!");
+          };
+
+          // [추가] 방울 터트리기 핸들러
+          const handlePopBubble = (id) => {
+              playSound('pop');
+              // 터진 방울 제거
+              const remaining = digestBubbles.filter(b => b.id !== id);
+              setDigestBubbles(remaining);
+              
+              if (remaining.length === 0) {
+                  // 다 터트리면 실제 레벨업 진행
+                  setTimeout(finishLevelUp, 500);
+              }
+          };
+
+          // [수정] 기존 handleLevelUp을 finishLevelUp으로 변경하여 미니게임 후 호출
+          const finishLevelUp = () => {
             if (level === 3) {
               setGameState('clear');
               speakWord(`축하해요! ${currentStyle.label}가 왕관을 썼어요!`);
@@ -574,12 +633,14 @@
             }
             
             setMonsterState('levelup');
+            setGameState('playing'); // 다시 게임 화면으로 돌아가서 레벨업 연출
             playSound('levelup');
             speakWord(`${currentStyle.label}가 쑥쑥 자랐어요!`);
             
             setTimeout(() => {
               setLevel(prev => prev + 1);
               setExp(0);
+              setCollectedWords([]); // 다음 레벨 위해 초기화
               setMonsterState('idle');
               nextQuestion(true);
             }, 2500);
@@ -621,6 +682,7 @@
           );
 
           if (gameState === 'characterSelect') {
+              // ... 기존 코드 유지
               return (
                   <div className="flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 relative">
                       {renderOverlayControls()}
@@ -650,6 +712,7 @@
           }
 
           if (gameState === 'menu') {
+            // ... 기존 코드 유지
             return (
               <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 relative ${currentStyle.lightBg}`}>
                 {renderOverlayControls()}
@@ -683,6 +746,7 @@
           }
 
           if (gameState === 'levelSelect') {
+            // ... 기존 코드 유지
             return (
                 <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 ${currentStyle.lightBg}`}>
                     {renderOverlayControls()}
@@ -711,7 +775,44 @@
             );
           }
 
+          // [추가] 소화시키기(미니게임) 화면
+          if (gameState === 'digesting') {
+              return (
+                  <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 relative overflow-hidden ${currentStyle.lightBg}`}>
+                      {renderOverlayControls()}
+                      <h2 className="text-3xl font-extrabold text-gray-800 mb-2 z-10">꺼억~ 소화시키자!</h2>
+                      <p className="text-lg text-gray-600 mb-8 z-10">방울을 눌러서 터트려주세요!</p>
+                      
+                      {/* 방울들 */}
+                      {digestBubbles.map((bubble) => (
+                          <button
+                              key={bubble.id}
+                              onClick={() => handlePopBubble(bubble.id)}
+                              className={`absolute rounded-full flex items-center justify-center shadow-lg cursor-pointer animate-float border-4 border-white/50 active:scale-95 hover:scale-110 transition-transform ${selectedChar === 'nyam' ? 'bg-green-400 text-white' : 'bg-cyan-400 text-white'}`}
+                              style={{
+                                  left: `${bubble.x}%`,
+                                  top: `${bubble.y}%`,
+                                  width: `${bubble.size}px`,
+                                  height: `${bubble.size}px`,
+                                  animationDuration: bubble.speed,
+                                  animationDelay: bubble.delay,
+                                  fontSize: '1.2rem',
+                                  fontWeight: 'bold'
+                              }}
+                          >
+                              {bubble.word}
+                          </button>
+                      ))}
+                      
+                      {digestBubbles.length === 0 && (
+                          <div className="z-20 text-4xl animate-bounce">👍 완료!</div>
+                      )}
+                  </div>
+              );
+          }
+
           if (gameState === 'clear') {
+            // ... 기존 코드 유지
             return (
               <div className="flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 text-center bg-purple-50">
                 {renderOverlayControls()}
@@ -741,7 +842,7 @@
           }
 
           const currentData = gameQuestions[currentIdx];
-          const displayPrompt = currentData.display || currentData.prompt;
+          const displayPrompt = currentData ? (currentData.display || currentData.prompt) : "";
           const progressPercent = (exp / maxExpPerLevel) * 100;
 
           // 5. 게임 플레이 화면 (반응형 텍스트 크기 적용)
@@ -825,7 +926,7 @@
               </div>
 
               <div className={`w-full grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 mt-4 md:mt-6 transition-opacity duration-300 ${(monsterState === 'eating' || monsterState === 'levelup') ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
-                {currentData.options.map((word, index) => {
+                {currentData && currentData.options.map((word, index) => {
                   const isWrong = wrongWord === word;
                   const textSizeClass = selectedChar === 'nyam' 
                     ? 'text-2xl md:text-4xl break-keep leading-tight'
