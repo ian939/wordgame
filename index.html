@@ -54,6 +54,9 @@
     <script type="text/babel">
         const { useState, useEffect, useCallback, useRef } = React;
 
+        // [수정] 레벨당 문제 수 상수 정의 (레벨업 기준과 동일하게 맞춤)
+        const QUESTIONS_PER_LEVEL = 10;
+
         // --- 아이콘 (SVG) ---
         const IconBase = (props) => (
             <svg {...props} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -74,7 +77,7 @@
 
         // --- [1. 데이터 및 로직] ---
         
-        // 1-A. 냠냠이 (단어) 데이터 - 3배 증량 (약 45~50개/레벨)
+        // 1-A. 냠냠이 (단어) 데이터
         const WORD_DATA = {
           level1: [ // 소리와 모양 -> 단어 (명사 위주)
             { prompt: "'멍멍' 짖는 동물은?", answer: "강아지", options: ["강아지", "고양이", "병아리"] },
@@ -305,7 +308,7 @@
           const [currentIdx, setCurrentIdx] = useState(0);
           const [level, setLevel] = useState(1);
           const [exp, setExp] = useState(0); 
-          const maxExpPerLevel = 10; 
+          const maxExpPerLevel = QUESTIONS_PER_LEVEL; 
 
           const [monsterState, setMonsterState] = useState('idle'); 
           const [swallowedWord, setSwallowedWord] = useState('');
@@ -313,7 +316,6 @@
           
           const [isMusicPlaying, setIsMusicPlaying] = useState(false);
           const [showDebug, setShowDebug] = useState(false);
-          // [수정] 오디오 경로 초기값 빈 문자열
           const [audioPath, setAudioPath] = useState(''); 
           const [audioLog, setAudioLog] = useState([]);
           const audioRef = useRef(null);
@@ -387,11 +389,9 @@
             };
           }, []);
 
-          // 오디오 경로 변경 감지 및 재생 시도
           useEffect(() => {
               if(audioRef.current && audioPath) {
                   addLog(`경로 설정: ${audioPath}`);
-                  // 이미 같은 경로라면 다시 로드하지 않음 (불필요한 중단 방지)
                   if (audioRef.current.src !== new URL(audioPath, window.location.href).href) {
                       audioRef.current.src = audioPath;
                   }
@@ -404,11 +404,8 @@
               audioRef.current.pause();
             } else {
               if (!audioPath) {
-                  // 경로가 없는 경우(캐릭터 선택 전), 현재 캐릭터에 맞춰 설정 (기본값)
                   const defaultPath = selectedChar === 'nyam' ? 'public/music/bgm1.mp3' : 'public/music/bgm2.mp3';
                   setAudioPath(defaultPath);
-                  
-                  // 경로 설정 직후 재생 시도
                   setTimeout(() => {
                       if (audioRef.current) {
                           audioRef.current.play().catch(e => addLog(`재생 실패: ${e.name}`));
@@ -424,20 +421,30 @@
 
           const changePath = (newPath) => setAudioPath(newPath);
 
+          // [수정] 게임 데이터 생성 로직 변경: 레벨별 10개씩만 정확하게 자르기
           const prepareGameData = (char, startLevel) => {
             let questions = [];
             if (char === 'nyam') {
-                if (startLevel === 1) questions = [...shuffleArray(WORD_DATA.level1), ...shuffleArray(WORD_DATA.level2), ...shuffleArray(WORD_DATA.level3)];
-                else if (startLevel === 2) questions = [...shuffleArray(WORD_DATA.level2), ...shuffleArray(WORD_DATA.level3)];
-                else questions = [...shuffleArray(WORD_DATA.level3)];
-                return questions.map(shuffleOptions);
-            } else {
-                const l1 = generateMathPool(1, 20);
-                const l2 = generateMathPool(2, 20);
-                const l3 = generateMathPool(3, 20);
+                // 한글 냠냠이: 각 레벨에서 정확히 10문제씩만 가져옴
+                const l1 = shuffleArray(WORD_DATA.level1).slice(0, QUESTIONS_PER_LEVEL);
+                const l2 = shuffleArray(WORD_DATA.level2).slice(0, QUESTIONS_PER_LEVEL);
+                const l3 = shuffleArray(WORD_DATA.level3).slice(0, QUESTIONS_PER_LEVEL);
+
                 if (startLevel === 1) questions = [...l1, ...l2, ...l3];
                 else if (startLevel === 2) questions = [...l2, ...l3];
                 else questions = [...l3];
+                
+                return questions.map(shuffleOptions);
+            } else {
+                // 수학 뇸뇸이: 각 레벨에서 정확히 10문제씩만 생성
+                const l1 = generateMathPool(1, QUESTIONS_PER_LEVEL);
+                const l2 = generateMathPool(2, QUESTIONS_PER_LEVEL);
+                const l3 = generateMathPool(3, QUESTIONS_PER_LEVEL);
+                
+                if (startLevel === 1) questions = [...l1, ...l2, ...l3];
+                else if (startLevel === 2) questions = [...l2, ...l3];
+                else questions = [...l3];
+                
                 return questions;
             }
           };
@@ -492,18 +499,12 @@
             } catch (e) { console.log("Audio API issue"); }
           }, []);
 
-          // [수정] 캐릭터 선택 시 BGM 경로 변경 및 즉시 재생
           const selectCharacter = (char) => {
               setSelectedChar(char);
               setGameState('menu');
-              
-              // 캐릭터별 BGM 설정 (bgm1: 냠냠이, bgm2: 뇸뇸이)
               const bgmFile = char === 'nyam' ? 'bgm1.mp3' : 'bgm2.mp3';
               const newPath = `public/music/${bgmFile}`;
-              
               setAudioPath(newPath);
-              
-              // 사용자 상호작용(클릭) 내에서 즉시 재생 시도
               if (audioRef.current) {
                   audioRef.current.src = newPath;
                   audioRef.current.play()
@@ -511,7 +512,6 @@
                       .catch(e => {
                           console.log("Auto-play blocked or file missing:", e);
                           addLog(`자동 재생 실패: ${e.name}`);
-                          // 실패해도 상태는 false로 유지되므로 버튼으로 켤 수 있음
                       });
               }
           };
@@ -558,10 +558,7 @@
             } else {
               setMonsterState('sad');
               setWrongWord(selectedOption);
-              
-              // [수정] 틀리면 게이지 깎임 (0보다 작아지지 않음)
               setExp(prev => (prev > 0 ? prev - 1 : 0));
-
               setTimeout(() => {
                 setMonsterState('idle');
                 setWrongWord(null);
@@ -596,7 +593,6 @@
             }
           };
 
-          // --- 렌더링 헬퍼 ---
           const renderOverlayControls = () => (
              <>
                 <div className="absolute top-4 right-4 md:top-6 md:right-6 flex gap-2 z-50">
@@ -624,7 +620,6 @@
              </>
           );
 
-          // 1. 캐릭터 선택 화면 (최초 화면)
           if (gameState === 'characterSelect') {
               return (
                   <div className="flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 relative">
@@ -632,7 +627,6 @@
                       <h1 className="text-3xl md:text-5xl font-extrabold text-gray-800 mb-8 tracking-tight text-center">누구를 키워볼까요?</h1>
                       
                       <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl justify-center items-stretch">
-                          {/* 냠냠이 선택 */}
                           <button onClick={() => selectCharacter('nyam')} className="flex-1 bg-white p-6 md:p-8 rounded-3xl shadow-xl border-4 border-green-200 hover:border-green-400 hover:scale-105 transition-all flex flex-col items-center group">
                               <div className="w-24 h-24 md:w-32 md:h-32 bg-green-300 rounded-full flex flex-col items-center justify-center mb-6 group-hover:animate-bounce">
                                   <div className="flex space-x-3 mb-2"><div className="w-4 h-4 bg-gray-800 rounded-full"></div><div className="w-4 h-4 bg-gray-800 rounded-full"></div></div>
@@ -642,7 +636,6 @@
                               <p className="text-gray-500">단어를 냠냠 먹어요!</p>
                           </button>
 
-                          {/* 뇸뇸이 선택 */}
                           <button onClick={() => selectCharacter('nyom')} className="flex-1 bg-white p-6 md:p-8 rounded-3xl shadow-xl border-4 border-cyan-200 hover:border-cyan-400 hover:scale-105 transition-all flex flex-col items-center group">
                               <div className="w-20 h-28 md:w-28 md:h-40 bg-cyan-400 rounded-[3rem] flex flex-col items-center justify-center mb-6 group-hover:animate-jelly">
                                   <div className="flex space-x-4 mb-3"><div className="w-3 h-5 bg-white rounded-full"></div><div className="w-3 h-5 bg-white rounded-full"></div></div>
@@ -656,7 +649,6 @@
               );
           }
 
-          // ... (메뉴 및 레벨 선택 화면 코드는 스타일 유지, 렌더링 로직 동일)
           if (gameState === 'menu') {
             return (
               <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 relative ${currentStyle.lightBg}`}>
@@ -835,10 +827,9 @@
               <div className={`w-full grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-6 mt-4 md:mt-6 transition-opacity duration-300 ${(monsterState === 'eating' || monsterState === 'levelup') ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}>
                 {currentData.options.map((word, index) => {
                   const isWrong = wrongWord === word;
-                  // [수정] 텍스트 크기 분기 처리 (냠냠이는 조금 작게, 뇸뇸이는 크게)
                   const textSizeClass = selectedChar === 'nyam' 
-                    ? 'text-2xl md:text-4xl break-keep leading-tight' // 한글 줄바꿈 허용
-                    : 'text-3xl md:text-5xl'; // 숫자는 큼직하게
+                    ? 'text-2xl md:text-4xl break-keep leading-tight'
+                    : 'text-3xl md:text-5xl';
                   
                   return (
                     <button
