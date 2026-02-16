@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>냠냠이와 뇸뇸이 키우기</title>
+    <title>냠냠이와 뇸뇸이, 그리고 쩝쩝이</title>
     
     <!-- 1. Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -40,6 +40,16 @@
         }
         .animate-jelly { animation: jelly 2s infinite ease-in-out; }
 
+        /* 쩝쩝이 전용 변신 애니메이션 */
+        @keyframes morph {
+            0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+            25% { border-radius: 50% 50% 20% 80% / 25% 80% 20% 75%; }
+            50% { border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%; }
+            75% { border-radius: 40% 60% 70% 30% / 40% 60% 30% 70%; }
+            100% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
+        }
+        .animate-morph { animation: morph 4s infinite ease-in-out; }
+
         @keyframes levelUpGlow {
             0% { box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.7); transform: scale(1); }
             50% { box-shadow: 0 0 50px 20px rgba(255, 255, 255, 0.9); transform: scale(1.2); }
@@ -47,7 +57,7 @@
         }
         .animate-levelup { animation: levelUpGlow 2s ease-in-out; }
 
-        /* [추가] 미니게임용 둥둥 떠다니기 애니메이션 */
+        /* 미니게임용 둥둥 떠다니기 애니메이션 */
         @keyframes float {
             0%, 100% { transform: translateY(0) translateX(0); }
             25% { transform: translateY(-15px) translateX(10px); }
@@ -56,7 +66,7 @@
         }
         .animate-float { animation: float 4s infinite ease-in-out; }
 
-        /* [추가] 터질 때 애니메이션 */
+        /* 터질 때 애니메이션 */
         @keyframes pop {
             0% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.4); opacity: 0.8; }
@@ -89,6 +99,7 @@
         const Music2 = (props) => <IconBase {...props}><circle cx="8" cy="18" r="4"/><path d="M12 18V2l7 4"/></IconBase>;
         const Wrench = (props) => <IconBase {...props}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></IconBase>;
         const Heart = (props) => <IconBase {...props} fill="currentColor" stroke="none"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></IconBase>;
+        const Layers = (props) => <IconBase {...props}><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></IconBase>;
 
 
         // --- [1. 데이터 및 로직] ---
@@ -111,7 +122,6 @@
             { prompt: "'뿌우' 코가 긴 동물", answer: "코끼리", options: ["코끼리", "기린", "하마"] },
             { prompt: "목이 '길쭉길쭉'한 동물", answer: "기린", options: ["기린", "사슴", "말"] },
             { prompt: "'개굴개굴' 노래해요", answer: "개구리", options: ["개구리", "매미", "귀뚜라미"] },
-            
             { prompt: "하늘을 '슈웅' 날아요!", answer: "비행기", options: ["비행기", "자동차", "배"] },
             { prompt: "기찻길을 '칙칙폭폭'!", answer: "기차", options: ["기차", "자전거", "버스"] },
             { prompt: "'부릉부릉' 도로를 달려요", answer: "자동차", options: ["자동차", "비행기", "배"] },
@@ -120,7 +130,6 @@
             { prompt: "'삐뽀삐뽀' 아픈 사람 도와줘요!", answer: "구급차", options: ["구급차", "경찰차", "소방차"] },
             { prompt: "'애앵애앵' 불을 꺼줘요!", answer: "소방차", options: ["소방차", "구급차", "택시"] },
             { prompt: "'위잉위잉' 도둑을 잡아요", answer: "경찰차", options: ["경찰차", "쓰레기차", "트럭"] },
-            
             { prompt: "맛있는 '빨간색' 과일!", answer: "사과", options: ["사과", "바나나", "포도"] },
             { prompt: "길쭉길쭉 '노란색' 과일!", answer: "바나나", options: ["바나나", "사과", "수박"] },
             { prompt: "'주렁주렁' 보라색 과일", answer: "포도", options: ["포도", "딸기", "귤"] },
@@ -128,7 +137,6 @@
             { prompt: "'콕콕' 씨가 박힌 빨간 과일", answer: "딸기", options: ["딸기", "토마토", "체리"] },
             { prompt: "'아삭아삭' 시원한 여름 과일", answer: "수박", options: ["수박", "참외", "파인애플"] },
             { prompt: "'털이 보송보송' 분홍 과일", answer: "복숭아", options: ["복숭아", "자두", "살구"] },
-
             { prompt: "비가 올 때 '활짝' 펼쳐요!", answer: "우산", options: ["우산", "모자", "가방"] },
             { prompt: "발에 '쏙' 신어요!", answer: "신발", options: ["신발", "장갑", "모자"] },
             { prompt: "손에 '끼우는' 따뜻한 것", answer: "장갑", options: ["장갑", "양말", "목도리"] },
@@ -136,12 +144,10 @@
             { prompt: "머리에 '폭' 써요!", answer: "모자", options: ["모자", "양말", "바지"] },
             { prompt: "다리에 '입는' 옷", answer: "바지", options: ["바지", "치마", "티셔츠"] },
             { prompt: "'빙글빙글' 도는 치마", answer: "치마", options: ["치마", "바지", "조끼"] },
-            
             { prompt: "손을 '뽀득뽀득' 씻어요!", answer: "비누", options: ["비누", "치약", "샴푸"] },
             { prompt: "이를 '치카치카' 닦아요!", answer: "칫솔", options: ["칫솔", "비누", "수건"] },
             { prompt: "머리를 '감는' 거품", answer: "샴푸", options: ["샴푸", "로션", "치약"] },
             { prompt: "몸을 '닦는' 부드러운 천", answer: "수건", options: ["수건", "이불", "옷"] },
-            
             { prompt: "밤에 '쿨쿨' 자요!", answer: "침대", options: ["침대", "책상", "의자"] },
             { prompt: "책을 '반듯하게' 펴요!", answer: "책상", options: ["책상", "침대", "냉장고"] },
             { prompt: "'엉덩이'를 붙이고 앉아요", answer: "의자", options: ["의자", "식탁", "소파"] },
@@ -159,7 +165,6 @@
             { prompt: "몽당연필은 '짧다'! 반대는?", answer: "길다", options: ["길다", "크다", "높다"] },
             { prompt: "사탕이 '많다'! 반대는?", answer: "적다", options: ["적다", "크다", "높다"] },
             { prompt: "친구들이 '적다'! 반대는?", answer: "많다", options: ["많다", "넓다", "깊다"] },
-            
             { prompt: "비행기는 '높다'! 반대는?", answer: "낮다", options: ["깊다", "낮다", "멀다"] },
             { prompt: "거북이는 '느리다'! 반대는?", answer: "빠르다", options: ["빠르다", "약하다", "순하다"] },
             { prompt: "치타는 '빠르다'! 반대는?", answer: "느리다", options: ["느리다", "급하다", "바쁘다"] },
@@ -169,7 +174,6 @@
             { prompt: "낮은 '밝다'! 반대는?", answer: "어둡다", options: ["어둡다", "흐리다", "멀다"] },
             { prompt: "겨울은 '춥다'! 반대는?", answer: "덥다", options: ["덥다", "시원하다", "따뜻하다"] },
             { prompt: "여름은 '덥다'! 반대는?", answer: "춥다", options: ["춥다", "서늘하다", "맑다"] },
-            
             { prompt: "이 문제는 '쉽다'! 반대는?", answer: "어렵다", options: ["어렵다", "재밌다", "지루하다"] },
             { prompt: "'앞'으로 가자! 반대는?", answer: "뒤", options: ["옆", "위", "뒤"] },
             { prompt: "'뒤'를 돌아봐! 반대는?", answer: "앞", options: ["앞", "옆", "밑"] },
@@ -183,7 +187,6 @@
             { prompt: "창문을 '닫다'! 반대는?", answer: "열다", options: ["열다", "부수다", "막다"] },
             { prompt: "장난감을 '밀다'! 반대는?", answer: "당기다", options: ["잡다", "놓다", "당기다"] },
             { prompt: "줄을 '당기다'! 반대는?", answer: "밀다", options: ["밀다", "끊다", "매다"] },
-            
             { prompt: "선물 받아서 '기쁘다'! 반대는?", answer: "슬프다", options: ["화나다", "슬프다", "졸리다"] },
             { prompt: "인형을 잃어버려서 '슬프다'! 반대는?", answer: "기쁘다", options: ["기쁘다", "아프다", "무섭다"] },
             { prompt: "손이 '깨끗하다'! 반대는?", answer: "더럽다", options: ["더럽다", "맑다", "예쁘다"] },
@@ -205,27 +208,23 @@
             { prompt: "'꽃이' 예쁘게~", answer: "피어요", options: ["져요", "피어요", "죽어요"] },
             { prompt: "'해가' 아침에~", answer: "떴어요", options: ["졌어요", "떴어요", "숨었어요"] },
             { prompt: "'달이' 밤에~", answer: "비쳐요", options: ["비쳐요", "자요", "울어요"] },
-            
             { prompt: "'사과를' 냠냠!", answer: "먹어요", options: ["먹어요", "마셔요", "입어요"] },
             { prompt: "'우유를' 꿀꺽꿀꺽!", answer: "마셔요", options: ["씹어요", "마셔요", "던져요"] },
             { prompt: "'공을' 뻥!", answer: "차요", options: ["차요", "먹어요", "입어요"] },
             { prompt: "'그림을' 쓱쓱!", answer: "그려요", options: ["지워요", "그려요", "부숴요"] },
             { prompt: "'노래를' 랄랄라~", answer: "불러요", options: ["들어요", "불러요", "봐요"] },
             { prompt: "'춤을' 신나게~", answer: "춰요", options: ["춰요", "걸어요", "앉아요"] },
-            
             { prompt: "'책을' 재미있게~", answer: "읽어요", options: ["읽어요", "찢어요", "덮어요"] },
             { prompt: "'옷을' 예쁘게~", answer: "입어요", options: ["벗어요", "입어요", "접어요"] },
             { prompt: "'신발을' 신고~", answer: "신어요", options: ["신어요", "써요", "껴요"] },
             { prompt: "'모자를' 머리에~", answer: "써요", options: ["써요", "입어요", "신어요"] },
             { prompt: "'양말을' 발에~", answer: "신어요", options: ["신어요", "걸어요", "입어요"] },
             { prompt: "'장갑을' 손에~", answer: "껴요", options: ["껴요", "신어요", "입어요"] },
-            
             { prompt: "'잠을' 쿨쿨~", answer: "자요", options: ["자요", "깨요", "놀아요"] },
             { prompt: "'아침에' 일찍~", answer: "일어나요", options: ["일어나요", "자요", "누워요"] },
             { prompt: "'세수를' 어푸어푸~", answer: "해요", options: ["해요", "가요", "봐요"] },
             { prompt: "'이빨을' 치카치카~", answer: "닦아요", options: ["닦아요", "씻어요", "빨아요"] },
             { prompt: "'손을' 깨끗이~", answer: "씻어요", options: ["씻어요", "만져요", "때려요"] },
-            
             { prompt: "'친구와' 사이좋게~", answer: "놀아요", options: ["놀아요", "싸워요", "밀어요"] },
             { prompt: "'엄마를' 사랑~", answer: "해요", options: ["해요", "미워해요", "싫어해요"] },
             { prompt: "'전화를' 여보세요?", answer: "받아요", options: ["받아요", "걸어요", "끊어요"] },
@@ -235,7 +234,49 @@
           ]
         };
 
-        // 1-B. 뇸뇸이 (수학) 문제 생성기
+        // [추가] 3. 쩝쩝이 (도형/색깔) 데이터
+        const JEOP_DATA = {
+            level1: [ // 모양과 색깔
+                { prompt: "'빨간색 세모'를 찾아줘!", answer: "🔺 빨강 세모", options: ["🔺 빨강 세모", "🟦 파랑 네모", "🟡 노랑 동그라미"] },
+                { prompt: "'파란색 네모'는 어디있을까?", answer: "🟦 파랑 네모", options: ["🟦 파랑 네모", "🔺 빨강 세모", "⭐ 노랑 별"] },
+                { prompt: "'노란색 동그라미'를 줘!", answer: "🟡 노랑 동그라미", options: ["🟡 노랑 동그라미", "🟩 초록 네모", "💜 보라 하트"] },
+                { prompt: "'초록색 별'이 반짝반짝!", answer: "⭐ 초록 별", options: ["⭐ 초록 별", "🔺 빨강 세모", "🟠 주황 동그라미"] },
+                { prompt: "'보라색 하트'를 찾아라!", answer: "💜 보라 하트", options: ["💜 보라 하트", "🔷 파랑 마름모", "🟥 빨강 네모"] },
+                { prompt: "뾰족뾰족 '세모'는?", answer: "🔺 세모", options: ["🔺 세모", "🟡 동그라미", "🟥 네모"] },
+                { prompt: "반듯반듯 '네모'는?", answer: "🟥 네모", options: ["🟥 네모", "🔺 세모", "⭐ 별"] },
+                { prompt: "동글동글 '동그라미'는?", answer: "🟡 동그라미", options: ["🟡 동그라미", "🟥 네모", "🔷 마름모"] },
+                { prompt: "반짝반짝 '별' 모양은?", answer: "⭐ 별", options: ["⭐ 별", "💜 하트", "🔺 세모"] },
+                { prompt: "사랑해 '하트' 모양은?", answer: "💜 하트", options: ["💜 하트", "⭐ 별", "🟡 동그라미"] },
+                { prompt: "'주황색' 블록을 찾아줘", answer: "🟠 주황 동그라미", options: ["🟠 주황 동그라미", "🟦 파랑 네모", "🟩 초록 세모"] },
+                { prompt: "'분홍색' 예쁜 블록", answer: "🩷 분홍 하트", options: ["🩷 분홍 하트", "🟡 노랑 별", "⬛ 검정 네모"] }
+            ],
+            level2: [ // 도형 합치기 (개념적)
+                { prompt: "세모 두 개를 합치면? (나비넥타이)", answer: "🎀 리본", options: ["🎀 리본", "🟡 동그라미", "🟥 네모"] },
+                { prompt: "네모 두 개를 위로 쌓으면? (눈사람)", answer: "⛄ 눈사람", options: ["⛄ 눈사람", "🔺 세모", "⭐ 별"] }, // 아이들 눈높이식 변형
+                { prompt: "동그라미 두 개면? (안경)", answer: "👓 안경", options: ["👓 안경", "🔺 세모", "🟥 네모"] },
+                { prompt: "빨강이랑 노랑을 섞으면? (주황)", answer: "🟠 주황", options: ["🟠 주황", "💜 보라", "🟩 초록"] },
+                { prompt: "노랑이랑 파랑을 섞으면? (초록)", answer: "🟩 초록", options: ["🟩 초록", "🟠 주황", "🩷 분홍"] },
+                { prompt: "빨강이랑 파랑을 섞으면? (보라)", answer: "💜 보라", options: ["💜 보라", "🟡 노랑", "🟩 초록"] },
+                { prompt: "흰색에 빨강을 조금 넣으면? (분홍)", answer: "🩷 분홍", options: ["🩷 분홍", "⬛ 검정", "🟦 파랑"] },
+                { prompt: "네모를 반으로 접으면? (세모)", answer: "🔺 세모", options: ["🔺 세모", "🟡 동그라미", "⭐ 별"] },
+                { prompt: "동그라미를 반으로 자르면? (반원)", answer: "🌙 달 모양", options: ["🌙 달 모양", "🟥 네모", "⭐ 별"] },
+                { prompt: "세모 세 개가 모이면? (별)", answer: "⭐ 별", options: ["⭐ 별", "🟥 네모", "🟡 동그라미"] }
+            ],
+            level3: [ // 패턴 추론
+                { prompt: "빨강-노랑-빨강-? 다음은?", answer: "🟡 노랑", options: ["🟡 노랑", "🔴 빨강", "🔵 파랑"] },
+                { prompt: "세모-네모-세모-? 다음은?", answer: "🟥 네모", options: ["🟥 네모", "🔺 세모", "🟡 동그라미"] },
+                { prompt: "동그라미-별-동그라미-? 다음은?", answer: "⭐ 별", options: ["⭐ 별", "🟡 동그라미", "🟥 네모"] },
+                { prompt: "1-2-1-? 다음 숫자는?", answer: "2", options: ["2", "1", "3"] },
+                { prompt: "A-B-A-? 다음 글자는?", answer: "B", options: ["B", "A", "C"] },
+                { prompt: "빨강-빨강-파랑-빨강-빨강-?", answer: "🔵 파랑", options: ["🔵 파랑", "🔴 빨강", "🟡 노랑"] },
+                { prompt: "크다-작다-크다-? 다음은?", answer: "작다", options: ["작다", "크다", "길다"] },
+                { prompt: "위-아래-위-? 다음은?", answer: "아래", options: ["아래", "위", "옆"] },
+                { prompt: "사과-포도-사과-? 다음은?", answer: "🍇 포도", options: ["🍇 포도", "🍎 사과", "🍌 바나나"] },
+                { prompt: "강아지-고양이-강아지-?", answer: "🐱 고양이", options: ["🐱 고양이", "🐶 강아지", "🐷 돼지"] }
+            ]
+        };
+
+        // 1-B. 뇸뇸이 (수학) 문제 생성기 - 로직 수정
         const generateMathQuestion = (level) => {
             let a, b, answer, prompt, op;
             
@@ -247,16 +288,16 @@
                 op = "-";
             } else if (level === 2) {
                 do {
-                    a = Math.floor(Math.random() * 9) + 1; // 1~9
-                    b = Math.floor(Math.random() * 9) + 1; // 1~9
+                    a = Math.floor(Math.random() * 9) + 1; 
+                    b = Math.floor(Math.random() * 9) + 1; 
                 } while (a + b < 10);
                 answer = a + b;
                 prompt = `${a} 더하기 ${b}은?`;
                 op = "+";
             } else {
                 do {
-                    a = Math.floor(Math.random() * 9) + 10; // 10~18 
-                    b = Math.floor(Math.random() * 9) + 1;  // 1~9
+                    a = Math.floor(Math.random() * 9) + 10; 
+                    b = Math.floor(Math.random() * 9) + 1; 
                 } while (a - b >= 10 || a - b < 0);
                 answer = a - b;
                 prompt = `${a} 빼기 ${b}는?`;
@@ -312,7 +353,7 @@
 
         // --- 메인 앱 컴포넌트 ---
         function WordTamagotchi() {
-          const [gameState, setGameState] = useState('characterSelect'); // 'characterSelect', 'menu', 'levelSelect', 'playing', 'digesting', 'clear'
+          const [gameState, setGameState] = useState('characterSelect'); 
           const [selectedChar, setSelectedChar] = useState('nyam'); 
           
           const [gameQuestions, setGameQuestions] = useState([]);
@@ -331,9 +372,10 @@
           const [audioLog, setAudioLog] = useState([]);
           const audioRef = useRef(null);
 
-          // [추가] 미니게임용 상태
+          // 미니게임용 상태 (소화시키기 & 블록쌓기)
           const [collectedWords, setCollectedWords] = useState([]);
           const [digestBubbles, setDigestBubbles] = useState([]);
+          const [buildingBlocks, setBuildingBlocks] = useState([]); // [추가] 쩝쩝이 블록 쌓기용
 
           const getStyles = () => {
               if (selectedChar === 'nyam') {
@@ -350,7 +392,7 @@
                           { size: 'w-64 h-64', desc: '문장 완성' }
                       ]
                   };
-              } else {
+              } else if (selectedChar === 'nyom') {
                   return {
                       bg: "bg-cyan-400",
                       text: "text-cyan-600",
@@ -364,6 +406,20 @@
                           { size: 'w-48 h-64', desc: '한자리 만들기 빼기' }
                       ]
                   };
+              } else { // [추가] 쩝쩝이
+                  return {
+                      bg: "bg-orange-400",
+                      text: "text-orange-600",
+                      lightBg: "bg-orange-50",
+                      label: "쩝쩝이",
+                      shape: "w-32 h-32 animate-morph", 
+                      eye: "w-5 h-5 bg-white rounded-full",
+                      levels: [
+                          { size: 'w-32 h-32', desc: '모양과 색깔' },
+                          { size: 'w-40 h-40', desc: '도형 합치기' },
+                          { size: 'w-48 h-48', desc: '패턴 추론' }
+                      ]
+                  };
               }
           };
           const currentStyle = getStyles();
@@ -373,7 +429,6 @@
              setAudioLog(prev => [`[${time}] ${msg}`, ...prev].slice(0, 5));
           };
 
-          // 오디오 관련 코드들 (생략하지 않고 유지)
           useEffect(() => {
             const audio = new Audio();
             audioRef.current = audio;
@@ -420,7 +475,10 @@
               audioRef.current.pause();
             } else {
               if (!audioPath) {
-                  const defaultPath = selectedChar === 'nyam' ? 'public/music/bgm1.mp3' : 'public/music/bgm2.mp3';
+                  // [수정] 기본값 로직 업데이트
+                  let defaultPath = 'public/music/bgm1.mp3';
+                  if (selectedChar === 'nyom') defaultPath = 'public/music/bgm2.mp3';
+                  if (selectedChar === 'jeop') defaultPath = 'public/music/bgm3.mp3';
                   setAudioPath(defaultPath);
                   setTimeout(() => {
                       if (audioRef.current) {
@@ -443,21 +501,26 @@
                 const l1 = shuffleArray(WORD_DATA.level1).slice(0, QUESTIONS_PER_LEVEL);
                 const l2 = shuffleArray(WORD_DATA.level2).slice(0, QUESTIONS_PER_LEVEL);
                 const l3 = shuffleArray(WORD_DATA.level3).slice(0, QUESTIONS_PER_LEVEL);
-
                 if (startLevel === 1) questions = [...l1, ...l2, ...l3];
                 else if (startLevel === 2) questions = [...l2, ...l3];
                 else questions = [...l3];
-                
+                return questions.map(shuffleOptions);
+            } else if (char === 'jeop') {
+                // [추가] 쩝쩝이 데이터 처리
+                const l1 = shuffleArray(JEOP_DATA.level1).slice(0, QUESTIONS_PER_LEVEL);
+                const l2 = shuffleArray(JEOP_DATA.level2).slice(0, QUESTIONS_PER_LEVEL);
+                const l3 = shuffleArray(JEOP_DATA.level3).slice(0, QUESTIONS_PER_LEVEL);
+                if (startLevel === 1) questions = [...l1, ...l2, ...l3];
+                else if (startLevel === 2) questions = [...l2, ...l3];
+                else questions = [...l3];
                 return questions.map(shuffleOptions);
             } else {
                 const l1 = generateMathPool(1, QUESTIONS_PER_LEVEL);
                 const l2 = generateMathPool(2, QUESTIONS_PER_LEVEL);
                 const l3 = generateMathPool(3, QUESTIONS_PER_LEVEL);
-                
                 if (startLevel === 1) questions = [...l1, ...l2, ...l3];
                 else if (startLevel === 2) questions = [...l2, ...l3];
                 else questions = [...l3];
-                
                 return questions;
             }
           };
@@ -483,13 +546,24 @@
               
               const now = ctx.currentTime;
               if (type === 'eat') {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(400, now);
-                osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
-                gainNode.gain.setValueAtTime(0.2, now);
-                gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
-                osc.start(now);
-                osc.stop(now + 0.1);
+                // [수정] 쩝쩝이는 조금 더 쫀득한 소리 (낮은 주파수 변화)
+                if (selectedChar === 'jeop') {
+                    osc.type = 'sawtooth';
+                    osc.frequency.setValueAtTime(200, now);
+                    osc.frequency.linearRampToValueAtTime(100, now + 0.15);
+                    gainNode.gain.setValueAtTime(0.3, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.15);
+                    osc.start(now);
+                    osc.stop(now + 0.15);
+                } else {
+                    osc.type = 'triangle';
+                    osc.frequency.setValueAtTime(400, now);
+                    osc.frequency.exponentialRampToValueAtTime(800, now + 0.1);
+                    gainNode.gain.setValueAtTime(0.2, now);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+                    osc.start(now);
+                    osc.stop(now + 0.1);
+                }
               } else if (type === 'happy') {
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(523.25, now);
@@ -509,7 +583,6 @@
                 osc.start(now);
                 osc.stop(now + 0.6);
               } else if (type === 'pop') {
-                // [추가] 터지는 소리
                 osc.type = 'sine';
                 osc.frequency.setValueAtTime(800, now);
                 osc.frequency.exponentialRampToValueAtTime(100, now + 0.1);
@@ -519,12 +592,16 @@
                 osc.stop(now + 0.1);
               }
             } catch (e) { console.log("Audio API issue"); }
-          }, []);
+          }, [selectedChar]);
 
           const selectCharacter = (char) => {
               setSelectedChar(char);
               setGameState('menu');
-              const bgmFile = char === 'nyam' ? 'bgm1.mp3' : 'bgm2.mp3';
+              // [수정] BGM 분기 처리
+              let bgmFile = 'bgm1.mp3';
+              if (char === 'nyom') bgmFile = 'bgm2.mp3';
+              if (char === 'jeop') bgmFile = 'bgm3.mp3';
+              
               const newPath = `public/music/${bgmFile}`;
               setAudioPath(newPath);
               if (audioRef.current) {
@@ -545,7 +622,7 @@
             setLevel(startLevel);
             setExp(0);
             setMonsterState('idle');
-            setCollectedWords([]); // [추가] 수집 단어 초기화
+            setCollectedWords([]); 
             setGameState('playing');
           };
 
@@ -561,7 +638,6 @@
               setSwallowedWord(selectedOption);
               playSound('eat');
               
-              // [추가] 정답 단어 수집
               setCollectedWords(prev => [...prev, selectedOption]);
               
               setTimeout(() => {
@@ -574,8 +650,12 @@
 
                 setTimeout(() => {
                   if (newExp >= maxExpPerLevel) {
-                    // [수정] 레벨업 대신 소화시키기 미니게임 시작
-                    startDigestion();
+                    // [수정] 쩝쩝이는 블록 쌓기, 나머지는 소화시키기
+                    if (selectedChar === 'jeop') {
+                        startBuilding();
+                    } else {
+                        startDigestion();
+                    }
                   } else {
                     nextQuestion();
                   }
@@ -593,16 +673,14 @@
             }
           };
 
-          // [추가] 소화시키기 미니게임 시작 함수
           const startDigestion = () => {
-              // 수집된 단어들로 방울 생성
               const newBubbles = collectedWords.map((word, i) => ({
                   id: i,
                   word: word,
-                  x: Math.random() * 70 + 5, // 5~75%
-                  y: Math.random() * 60 + 10, // 10~70%
-                  size: Math.random() * 40 + 80, // 80~120px
-                  speed: Math.random() * 2 + 3 + 's', // 3~5s duration
+                  x: Math.random() * 70 + 5, 
+                  y: Math.random() * 60 + 10, 
+                  size: Math.random() * 40 + 80, 
+                  speed: Math.random() * 2 + 3 + 's', 
                   delay: Math.random() * 2 + 's'
               }));
               
@@ -611,20 +689,68 @@
               speakWord("배가 너무 불러요! 방울을 터트려서 소화시켜주세요!");
           };
 
-          // [추가] 방울 터트리기 핸들러
+          // [추가] 쩝쩝이 블록 쌓기 미니게임 시작
+          const startBuilding = () => {
+              // 수집된 단어들을 블록으로 변환 (랜덤 위치에 뿌려두기)
+              const newBlocks = collectedWords.map((word, i) => ({
+                  id: i,
+                  word: word,
+                  x: 50 + (Math.random() * 200 - 100), // 중앙 기준 랜덤 분산
+                  y: 300 + (Math.random() * 100),
+                  color: ['bg-red-400', 'bg-blue-400', 'bg-yellow-400', 'bg-green-400', 'bg-purple-400'][i % 5]
+              }));
+              setBuildingBlocks(newBlocks);
+              setGameState('building');
+              speakWord("꺼억~ 배불러! 뱉어낸 블록으로 성을 쌓아보세요!");
+          };
+
+          // [추가] 블록 드래그 핸들러 (간단한 구현)
+          const handleBlockDragStart = (e, id) => {
+              // 터치/마우스 공통 처리
+              const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+              const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+              const block = buildingBlocks.find(b => b.id === id);
+              
+              // 드래그 시작 위치 저장
+              const startX = clientX;
+              const startY = clientY;
+              const originalX = block.x;
+              const originalY = block.y;
+
+              const handleMove = (moveEvent) => {
+                  const moveX = moveEvent.touches ? moveEvent.touches[0].clientX : moveEvent.clientX;
+                  const moveY = moveEvent.touches ? moveEvent.touches[0].clientY : moveEvent.clientY;
+                  
+                  const deltaX = moveX - startX;
+                  const deltaY = moveY - startY;
+
+                  setBuildingBlocks(prev => prev.map(b => 
+                      b.id === id ? { ...b, x: originalX + deltaX, y: originalY + deltaY } : b
+                  ));
+              };
+
+              const handleEnd = () => {
+                  window.removeEventListener('mousemove', handleMove);
+                  window.removeEventListener('mouseup', handleEnd);
+                  window.removeEventListener('touchmove', handleMove);
+                  window.removeEventListener('touchend', handleEnd);
+              };
+
+              window.addEventListener('mousemove', handleMove);
+              window.addEventListener('mouseup', handleEnd);
+              window.addEventListener('touchmove', handleMove);
+              window.addEventListener('touchend', handleEnd);
+          };
+
           const handlePopBubble = (id) => {
               playSound('pop');
-              // 터진 방울 제거
               const remaining = digestBubbles.filter(b => b.id !== id);
               setDigestBubbles(remaining);
-              
               if (remaining.length === 0) {
-                  // 다 터트리면 실제 레벨업 진행
                   setTimeout(finishLevelUp, 500);
               }
           };
 
-          // [수정] 기존 handleLevelUp을 finishLevelUp으로 변경하여 미니게임 후 호출
           const finishLevelUp = () => {
             if (level === 3) {
               setGameState('clear');
@@ -633,14 +759,14 @@
             }
             
             setMonsterState('levelup');
-            setGameState('playing'); // 다시 게임 화면으로 돌아가서 레벨업 연출
+            setGameState('playing'); 
             playSound('levelup');
             speakWord(`${currentStyle.label}가 쑥쑥 자랐어요!`);
             
             setTimeout(() => {
               setLevel(prev => prev + 1);
               setExp(0);
-              setCollectedWords([]); // 다음 레벨 위해 초기화
+              setCollectedWords([]); 
               setMonsterState('idle');
               nextQuestion(true);
             }, 2500);
@@ -672,6 +798,7 @@
                         <div className="flex flex-wrap gap-1 mt-2">
                              <button onClick={() => changePath('public/music/bgm1.mp3')} className="bg-gray-700 px-2 py-1 rounded">bgm1</button>
                              <button onClick={() => changePath('public/music/bgm2.mp3')} className="bg-gray-700 px-2 py-1 rounded">bgm2</button>
+                             <button onClick={() => changePath('public/music/bgm3.mp3')} className="bg-gray-700 px-2 py-1 rounded">bgm3</button>
                         </div>
                         <div className="mt-2 border-t pt-2 max-h-24 overflow-y-auto font-mono text-gray-400">
                             {audioLog.map((l,i) => <div key={i}>{l}</div>)}
@@ -682,29 +809,40 @@
           );
 
           if (gameState === 'characterSelect') {
-              // ... 기존 코드 유지
               return (
-                  <div className="flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 relative">
+                  <div className="flex flex-col items-center justify-center h-full w-full max-w-4xl mx-auto p-6 relative">
                       {renderOverlayControls()}
                       <h1 className="text-3xl md:text-5xl font-extrabold text-gray-800 mb-8 tracking-tight text-center">누구를 키워볼까요?</h1>
                       
-                      <div className="flex flex-col md:flex-row gap-6 w-full max-w-2xl justify-center items-stretch">
-                          <button onClick={() => selectCharacter('nyam')} className="flex-1 bg-white p-6 md:p-8 rounded-3xl shadow-xl border-4 border-green-200 hover:border-green-400 hover:scale-105 transition-all flex flex-col items-center group">
-                              <div className="w-24 h-24 md:w-32 md:h-32 bg-green-300 rounded-full flex flex-col items-center justify-center mb-6 group-hover:animate-bounce">
+                      <div className="flex flex-col md:flex-row gap-6 w-full justify-center items-stretch">
+                          {/* 냠냠이 */}
+                          <button onClick={() => selectCharacter('nyam')} className="flex-1 bg-white p-6 rounded-3xl shadow-xl border-4 border-green-200 hover:border-green-400 hover:scale-105 transition-all flex flex-col items-center group">
+                              <div className="w-24 h-24 bg-green-300 rounded-full flex flex-col items-center justify-center mb-4 group-hover:animate-bounce">
                                   <div className="flex space-x-3 mb-2"><div className="w-4 h-4 bg-gray-800 rounded-full"></div><div className="w-4 h-4 bg-gray-800 rounded-full"></div></div>
                                   <div className="w-10 h-4 bg-gray-800 rounded-b-full"></div>
                               </div>
-                              <h2 className="text-xl md:text-2xl font-bold text-green-600 mb-2">글자 괴물 냠냠이</h2>
-                              <p className="text-gray-500">단어를 냠냠 먹어요!</p>
+                              <h2 className="text-xl font-bold text-green-600">냠냠이</h2>
+                              <p className="text-sm text-gray-500">한글 놀이</p>
                           </button>
 
-                          <button onClick={() => selectCharacter('nyom')} className="flex-1 bg-white p-6 md:p-8 rounded-3xl shadow-xl border-4 border-cyan-200 hover:border-cyan-400 hover:scale-105 transition-all flex flex-col items-center group">
-                              <div className="w-20 h-28 md:w-28 md:h-40 bg-cyan-400 rounded-[3rem] flex flex-col items-center justify-center mb-6 group-hover:animate-jelly">
+                          {/* 뇸뇸이 */}
+                          <button onClick={() => selectCharacter('nyom')} className="flex-1 bg-white p-6 rounded-3xl shadow-xl border-4 border-cyan-200 hover:border-cyan-400 hover:scale-105 transition-all flex flex-col items-center group">
+                              <div className="w-20 h-28 bg-cyan-400 rounded-[3rem] flex flex-col items-center justify-center mb-4 group-hover:animate-jelly">
                                   <div className="flex space-x-4 mb-3"><div className="w-3 h-5 bg-white rounded-full"></div><div className="w-3 h-5 bg-white rounded-full"></div></div>
                                   <div className="w-8 h-2 bg-white/50 rounded-full"></div>
                               </div>
-                              <h2 className="text-xl md:text-2xl font-bold text-cyan-600 mb-2">숫자 슬라임 뇸뇸이</h2>
-                              <p className="text-gray-500">숫자를 뇸뇸 먹어요!</p>
+                              <h2 className="text-xl font-bold text-cyan-600">뇸뇸이</h2>
+                              <p className="text-sm text-gray-500">수학 놀이</p>
+                          </button>
+
+                          {/* [추가] 쩝쩝이 */}
+                          <button onClick={() => selectCharacter('jeop')} className="flex-1 bg-white p-6 rounded-3xl shadow-xl border-4 border-orange-200 hover:border-orange-400 hover:scale-105 transition-all flex flex-col items-center group">
+                              <div className="w-24 h-24 bg-orange-400 animate-morph flex flex-col items-center justify-center mb-4 shadow-sm">
+                                  <div className="flex space-x-4 mb-2"><div className="w-4 h-4 bg-white rounded-full"></div><div className="w-4 h-4 bg-white rounded-full"></div></div>
+                                  <div className="w-8 h-8 border-b-4 border-white rounded-full"></div>
+                              </div>
+                              <h2 className="text-xl font-bold text-orange-600">쩝쩝이</h2>
+                              <p className="text-sm text-gray-500">도형 놀이</p>
                           </button>
                       </div>
                   </div>
@@ -712,7 +850,6 @@
           }
 
           if (gameState === 'menu') {
-            // ... 기존 코드 유지
             return (
               <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 relative ${currentStyle.lightBg}`}>
                 {renderOverlayControls()}
@@ -723,16 +860,23 @@
                 </div>
                 <div className={`${currentStyle.shape} ${currentStyle.bg} flex flex-col items-center justify-center mb-6 animate-bounce shadow-lg transition-all transform scale-90 md:scale-100`}>
                   <div className={`flex space-x-3 mb-2`}>
-                      <div className={`${currentStyle.eye} rounded-full`}></div>
-                      <div className={`${currentStyle.eye} rounded-full`}></div>
+                      <div className={`${currentStyle.eye}`}></div>
+                      <div className={`${currentStyle.eye}`}></div>
                   </div>
-                  <div className="w-10 h-4 bg-black/20 rounded-b-full"></div>
+                  {selectedChar === 'jeop' ? 
+                    <div className="w-8 h-8 border-b-4 border-white rounded-full"></div> : 
+                    <div className="w-10 h-4 bg-black/20 rounded-b-full"></div>
+                  }
                 </div>
                 <h1 className="text-3xl md:text-5xl font-extrabold text-gray-800 mb-4 tracking-tight text-center">
-                    {selectedChar === 'nyam' ? <>글자 괴물 <span className={currentStyle.text}>냠냠이</span></> : <>숫자 슬라임 <span className={currentStyle.text}>뇸뇸이</span></>}
+                    {selectedChar === 'nyam' ? <>글자 괴물 <span className={currentStyle.text}>냠냠이</span></> : 
+                     selectedChar === 'nyom' ? <>숫자 슬라임 <span className={currentStyle.text}>뇸뇸이</span></> :
+                     <>변신 괴물 <span className={currentStyle.text}>쩝쩝이</span></>}
                 </h1>
                 <p className="text-base md:text-lg text-gray-600 mb-8 font-medium text-center">
-                    {selectedChar === 'nyam' ? "단어를 먹고 무럭무럭 자라나요!" : "숫자를 먹으면 쑥쑥 커져요!"}
+                    {selectedChar === 'nyam' ? "단어를 먹고 무럭무럭 자라나요!" : 
+                     selectedChar === 'nyom' ? "숫자를 먹으면 쑥쑥 커져요!" : 
+                     "도형을 먹으면 멋지게 변신해요!"}
                 </p>
                 <button 
                   onClick={() => setGameState('levelSelect')}
@@ -746,7 +890,6 @@
           }
 
           if (gameState === 'levelSelect') {
-            // ... 기존 코드 유지
             return (
                 <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 ${currentStyle.lightBg}`}>
                     {renderOverlayControls()}
@@ -756,9 +899,9 @@
                             <button 
                                 key={lv}
                                 onClick={() => startGame(lv)}
-                                className={`flex flex-row md:flex-col items-center p-4 md:p-6 bg-white rounded-3xl border-4 ${selectedChar === 'nyam' ? 'border-green-200 hover:border-green-400' : 'border-cyan-200 hover:border-cyan-400'} hover:bg-white/50 transition-all shadow-md active:scale-95`}
+                                className={`flex flex-row md:flex-col items-center p-4 md:p-6 bg-white rounded-3xl border-4 ${selectedChar === 'nyam' ? 'border-green-200 hover:border-green-400' : selectedChar === 'nyom' ? 'border-cyan-200 hover:border-cyan-400' : 'border-orange-200 hover:border-orange-400'} hover:bg-white/50 transition-all shadow-md active:scale-95`}
                             >
-                                <div className={`${currentStyle.levels[lv-1].size} ${currentStyle.bg} ${selectedChar === 'nyom' ? 'rounded-[3rem]' : 'rounded-full'} mr-4 md:mr-0 md:mb-4 shadow-sm flex items-center justify-center text-white font-bold text-xl opacity-80 transform scale-50 md:scale-75 origin-left md:origin-center`}>
+                                <div className={`${currentStyle.levels[lv-1].size} ${currentStyle.bg} ${selectedChar === 'nyom' ? 'rounded-[3rem]' : selectedChar === 'jeop' ? 'rounded-3xl' : 'rounded-full'} mr-4 md:mr-0 md:mb-4 shadow-sm flex items-center justify-center text-white font-bold text-xl opacity-80 transform scale-50 md:scale-75 origin-left md:origin-center`}>
                                     Lv.{lv}
                                 </div>
                                 <div className="text-left md:text-center">
@@ -775,49 +918,74 @@
             );
           }
 
-          // [추가] 소화시키기(미니게임) 화면
           if (gameState === 'digesting') {
               return (
                   <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 relative overflow-hidden ${currentStyle.lightBg}`}>
                       {renderOverlayControls()}
                       <h2 className="text-3xl font-extrabold text-gray-800 mb-2 z-10">꺼억~ 소화시키자!</h2>
                       <p className="text-lg text-gray-600 mb-8 z-10">방울을 눌러서 터트려주세요!</p>
-                      
-                      {/* 방울들 */}
                       {digestBubbles.map((bubble) => (
                           <button
                               key={bubble.id}
                               onClick={() => handlePopBubble(bubble.id)}
                               className={`absolute rounded-full flex items-center justify-center shadow-lg cursor-pointer animate-float border-4 border-white/50 active:scale-95 hover:scale-110 transition-transform ${selectedChar === 'nyam' ? 'bg-green-400 text-white' : 'bg-cyan-400 text-white'}`}
-                              style={{
-                                  left: `${bubble.x}%`,
-                                  top: `${bubble.y}%`,
-                                  width: `${bubble.size}px`,
-                                  height: `${bubble.size}px`,
-                                  animationDuration: bubble.speed,
-                                  animationDelay: bubble.delay,
-                                  fontSize: '1.2rem',
-                                  fontWeight: 'bold'
-                              }}
+                              style={{ left: `${bubble.x}%`, top: `${bubble.y}%`, width: `${bubble.size}px`, height: `${bubble.size}px`, animationDuration: bubble.speed, animationDelay: bubble.delay, fontSize: '1.2rem', fontWeight: 'bold' }}
                           >
                               {bubble.word}
                           </button>
                       ))}
+                      {digestBubbles.length === 0 && <div className="z-20 text-4xl animate-bounce">👍 완료!</div>}
+                  </div>
+              );
+          }
+
+          // [추가] 블록 쌓기 미니게임
+          if (gameState === 'building') {
+              return (
+                  <div className={`flex flex-col items-center h-full w-full max-w-3xl mx-auto p-4 rounded-3xl shadow-2xl my-4 relative overflow-hidden bg-orange-50 select-none`}>
+                      {renderOverlayControls()}
+                      <div className="absolute top-6 left-6 z-10">
+                          <h2 className="text-2xl font-extrabold text-orange-800">블록 쌓기 대작전!</h2>
+                          <p className="text-orange-600 text-sm">블록을 끌어서 성을 쌓아보세요!</p>
+                      </div>
                       
-                      {digestBubbles.length === 0 && (
-                          <div className="z-20 text-4xl animate-bounce">👍 완료!</div>
-                      )}
+                      <div className="w-full h-full relative" 
+                           onTouchMove={(e) => e.preventDefault()} /* 스크롤 방지 */
+                      >
+                          {buildingBlocks.map((block) => (
+                              <div
+                                  key={block.id}
+                                  onMouseDown={(e) => handleBlockDragStart(e, block.id)}
+                                  onTouchStart={(e) => handleBlockDragStart(e, block.id)}
+                                  className={`absolute w-20 h-20 ${block.color} rounded-lg shadow-md flex items-center justify-center text-white font-bold text-lg cursor-move border-2 border-white/30`}
+                                  style={{ 
+                                      left: block.x, 
+                                      top: block.y,
+                                      touchAction: 'none' // 터치 동작 제어
+                                  }}
+                              >
+                                  {/* 블록 내용 표시 (텍스트가 길면 자름) */}
+                                  <span className="pointer-events-none px-1 text-center truncate w-full">{block.word.substring(0, 5)}</span>
+                              </div>
+                          ))}
+                      </div>
+                      
+                      <button 
+                          onClick={finishLevelUp}
+                          className="absolute bottom-6 right-6 bg-orange-600 text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-orange-700 active:scale-95 z-20 flex items-center gap-2"
+                      >
+                          <Layers size={20}/> 다 만들었어요!
+                      </button>
                   </div>
               );
           }
 
           if (gameState === 'clear') {
-            // ... 기존 코드 유지
             return (
               <div className="flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 text-center bg-purple-50">
                 {renderOverlayControls()}
                 <Sparkles className="text-purple-400 w-16 h-16 mb-6 animate-spin-slow" />
-                <div className={`${currentStyle.levels[2].size} ${currentStyle.bg} ${selectedChar === 'nyom' ? 'rounded-[3rem]' : 'rounded-full'} flex flex-col items-center justify-center mb-8 shadow-2xl animate-bounce relative`}>
+                <div className={`${currentStyle.levels[2].size} ${currentStyle.bg} ${selectedChar === 'nyom' ? 'rounded-[3rem]' : selectedChar === 'jeop' ? 'rounded-3xl' : 'rounded-full'} flex flex-col items-center justify-center mb-8 shadow-2xl animate-bounce relative`}>
                   <div className="absolute -top-12 animate-pulse">
                     <Crown className="text-yellow-400 fill-yellow-400 drop-shadow-lg w-16 h-16" />
                   </div>
@@ -855,7 +1023,7 @@
                     <span className="text-md md:text-lg font-bold text-gray-500">{exp} / {maxExpPerLevel}</span>
                   </div>
                   <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
-                    <div className={`h-full ${selectedChar === 'nyam' ? 'bg-green-400' : 'bg-cyan-400'} transition-all duration-500 ease-out`} style={{ width: `${progressPercent}%` }} />
+                    <div className={`h-full ${selectedChar === 'nyam' ? 'bg-green-400' : selectedChar === 'nyom' ? 'bg-cyan-400' : 'bg-orange-400'} transition-all duration-500 ease-out`} style={{ width: `${progressPercent}%` }} />
                   </div>
                 </div>
                 <button onClick={() => setGameState('menu')} className="p-3 bg-gray-100 rounded-full hover:bg-gray-200 flex-shrink-0">
@@ -871,23 +1039,24 @@
                   className={`
                     cursor-pointer active:scale-95
                     mb-6 bg-white px-6 py-4 md:px-8 md:py-6 rounded-3xl rounded-br-none shadow-lg border-4 border-gray-100 
-                    transition-all duration-300 ${selectedChar === 'nyam' ? 'hover:border-green-300' : 'hover:border-cyan-300'} hover:shadow-xl group
+                    transition-all duration-300 ${selectedChar === 'nyam' ? 'hover:border-green-300' : selectedChar === 'nyom' ? 'hover:border-cyan-300' : 'hover:border-orange-300'} hover:shadow-xl group
                     ${monsterState === 'levelup' ? 'opacity-0' : 'opacity-100'}
                   `}
                 >
                   <div className="flex items-center justify-center space-x-3">
                     <p className="text-2xl md:text-4xl font-bold text-gray-800 text-center break-keep">
-                      {monsterState === 'happy' ? (selectedChar === 'nyam' ? "우와! 꿀맛이야!" : "냠냠! 숫자 맛있어!") : displayPrompt}
+                      {monsterState === 'happy' ? (selectedChar === 'nyam' ? "우와! 꿀맛이야!" : selectedChar === 'nyom' ? "냠냠! 숫자 맛있어!" : "쩝쩝! 모양이 재밌어!") : displayPrompt}
                     </p>
                     {monsterState !== 'happy' && (
-                      <Volume2 className={`text-gray-400 ${selectedChar === 'nyam' ? 'group-hover:text-green-500' : 'group-hover:text-cyan-500'} transition-colors`} size={28} />
+                      <Volume2 className={`text-gray-400 ${selectedChar === 'nyam' ? 'group-hover:text-green-500' : selectedChar === 'nyom' ? 'group-hover:text-cyan-500' : 'group-hover:text-orange-500'} transition-colors`} size={28} />
                     )}
                   </div>
                 </div>
 
                 <div className={`
                   relative transition-all duration-700 ease-in-out flex flex-col items-center justify-center shadow-xl transform scale-100 md:scale-125
-                  ${currentStyle.levels[level-1].size} ${currentStyle.bg} ${selectedChar === 'nyom' ? 'rounded-[3rem] animate-jelly' : 'rounded-full'}
+                  ${currentStyle.levels[level-1].size} ${currentStyle.bg} 
+                  ${selectedChar === 'nyom' ? 'rounded-[3rem] animate-jelly' : selectedChar === 'jeop' ? 'animate-morph' : 'rounded-full'}
                   ${monsterState === 'sad' ? 'animate-shake bg-gray-400' : ''}
                   ${monsterState === 'happy' ? 'animate-bounce' : ''}
                   ${monsterState === 'levelup' ? 'animate-levelup bg-yellow-300' : ''}
@@ -903,19 +1072,19 @@
                     ) : monsterState === 'sad' ? (
                       <><div className="text-gray-800 font-bold text-2xl md:text-4xl">{'>'}</div><div className="text-gray-800 font-bold text-2xl md:text-4xl">{'<'}</div></>
                     ) : (
-                      <><div className={`${currentStyle.eye} rounded-full`}></div><div className={`${currentStyle.eye} rounded-full`}></div></>
+                      <><div className={`${currentStyle.eye}`}></div><div className={`${currentStyle.eye}`}></div></>
                     )}
                   </div>
                   <div className={`
                     bg-black/20 transition-all duration-300 flex items-center justify-center overflow-hidden relative
-                    ${monsterState === 'idle' ? 'w-1/3 h-2 rounded-full mt-2' : ''}
+                    ${monsterState === 'idle' ? (selectedChar === 'jeop' ? 'w-8 h-8 border-b-4 border-white rounded-full' : 'w-1/3 h-2 rounded-full mt-2') : ''}
                     ${monsterState === 'eating' ? 'w-1/2 h-1/2 rounded-full animate-chomp' : ''}
                     ${monsterState === 'happy' ? 'w-1/2 h-1/3 rounded-b-full mt-1' : ''}
                     ${monsterState === 'sad' ? 'w-1/3 h-2 rounded-t-full mt-4' : ''}
                     ${monsterState === 'levelup' ? 'w-1/2 h-1/3 rounded-b-full mt-1' : ''}
                   `}>
                     {monsterState === 'eating' && swallowedWord && (
-                      <span className="text-white font-bold text-xl md:text-3xl absolute animate-ping">{swallowedWord}</span>
+                      <span className="text-white font-bold text-xl md:text-3xl absolute animate-ping">{swallowedWord.substring(0, 3)}</span>
                     )}
                     {(monsterState === 'happy' || monsterState === 'levelup') && (
                       <div className="absolute bottom-0 w-3/4 h-1/2 bg-red-400 rounded-t-full"></div>
@@ -930,7 +1099,7 @@
                   const isWrong = wrongWord === word;
                   const textSizeClass = selectedChar === 'nyam' 
                     ? 'text-2xl md:text-4xl break-keep leading-tight'
-                    : 'text-3xl md:text-5xl';
+                    : 'text-2xl md:text-3xl break-keep'; // [수정] 쩝쩝이 보기도 적당한 크기로
                   
                   return (
                     <button
@@ -942,7 +1111,7 @@
                         bg-white text-gray-700 border-b-4 md:border-b-8 border-gray-200
                         hover:scale-105 active:border-b-0 active:translate-y-2
                         ${textSizeClass}
-                        ${selectedChar === 'nyam' ? 'hover:bg-green-50' : 'hover:bg-cyan-50'}
+                        ${selectedChar === 'nyam' ? 'hover:bg-green-50' : selectedChar === 'nyom' ? 'hover:bg-cyan-50' : 'hover:bg-orange-50'}
                         ${isWrong ? 'bg-red-100 text-red-500 border-red-300 animate-shake' : ''}
                       `}
                     >
