@@ -31,7 +31,6 @@
         }
         .animate-chomp { animation: chomp 0.3s ease-in-out infinite; }
         
-        /* 뇸뇸이 전용 젤리 애니메이션 */
         @keyframes jelly {
             0%, 100% { transform: scale(1, 1); }
             25% { transform: scale(0.9, 1.1); }
@@ -40,7 +39,6 @@
         }
         .animate-jelly { animation: jelly 2s infinite ease-in-out; }
 
-        /* 쩝쩝이 전용 변신 애니메이션 */
         @keyframes morph {
             0% { border-radius: 30% 70% 70% 30% / 30% 30% 70% 70%; }
             25% { border-radius: 50% 50% 20% 80% / 25% 80% 20% 75%; }
@@ -57,7 +55,6 @@
         }
         .animate-levelup { animation: levelUpGlow 2s ease-in-out; }
 
-        /* 미니게임용 둥둥 떠다니기 애니메이션 */
         @keyframes float {
             0%, 100% { transform: translateY(0) translateX(0); }
             25% { transform: translateY(-15px) translateX(10px); }
@@ -66,7 +63,6 @@
         }
         .animate-float { animation: float 4s infinite ease-in-out; }
 
-        /* 터질 때 애니메이션 */
         @keyframes pop {
             0% { transform: scale(1); opacity: 1; }
             50% { transform: scale(1.4); opacity: 0.8; }
@@ -99,7 +95,7 @@
         const Music2 = (props) => <IconBase {...props}><circle cx="8" cy="18" r="4"/><path d="M12 18V2l7 4"/></IconBase>;
         const Wrench = (props) => <IconBase {...props}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></IconBase>;
         const Heart = (props) => <IconBase {...props} fill="currentColor" stroke="none"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></IconBase>;
-
+        const Timer = (props) => <IconBase {...props}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></IconBase>;
 
         // --- [1. 데이터 및 로직] ---
         
@@ -233,45 +229,45 @@
           ]
         };
 
-        // [수정] 3. 쩝쩝이 (도형/색깔) 데이터 - 레벨 및 패턴 개편
+        // 3. 쩝쩝이 (도형/색깔) 데이터 - 레벨 및 패턴 개편
         const JEOP_DATA = {
-            level1: [ // 모양과 색깔 (블록 맞추기)
-                { prompt: "'빨간색 세모'를 찾아줘!", answer: "🔺 빨강 세모", options: ["🔺 빨강 세모", "🟦 파랑 네모", "🟡 노랑 동그라미"] },
-                { prompt: "'파란색 네모'는 어디있을까?", answer: "🟦 파랑 네모", options: ["🟦 파랑 네모", "🔺 빨강 세모", "⭐ 노랑 별"] },
-                { prompt: "'노란색 동그라미'를 줘!", answer: "🟡 노랑 동그라미", options: ["🟡 노랑 동그라미", "🟩 초록 네모", "💜 보라 하트"] },
-                { prompt: "'초록색 별'이 반짝반짝!", answer: "⭐ 초록 별", options: ["⭐ 초록 별", "🔺 빨강 세모", "🟠 주황 동그라미"] },
-                { prompt: "'보라색 하트'를 찾아라!", answer: "💜 보라 하트", options: ["💜 보라 하트", "🔷 파랑 마름모", "🟥 빨강 네모"] },
-                { prompt: "뾰족뾰족 '세모'는?", answer: "🔺 세모", options: ["🔺 세모", "🟡 동그라미", "🟥 네모"] },
-                { prompt: "반듯반듯 '네모'는?", answer: "🟥 네모", options: ["🟥 네모", "🔺 세모", "⭐ 별"] },
-                { prompt: "동글동글 '동그라미'는?", answer: "🟡 동그라미", options: ["🟡 동그라미", "🟥 네모", "🔷 마름모"] },
-                { prompt: "반짝반짝 '별' 모양은?", answer: "⭐ 별", options: ["⭐ 별", "💜 하트", "🔺 세모"] },
-                { prompt: "사랑해 '하트' 모양은?", answer: "💜 하트", options: ["💜 하트", "⭐ 별", "🟡 동그라미"] },
-                { prompt: "'주황색' 블록을 찾아줘", answer: "🟠 주황 동그라미", options: ["🟠 주황 동그라미", "🟦 파랑 네모", "🟩 초록 세모"] },
-                { prompt: "'분홍색' 예쁜 블록", answer: "🩷 분홍 하트", options: ["🩷 분홍 하트", "🟡 노랑 별", "⬛ 검정 네모"] }
+            level1: [ // 모양과 색깔 (블록 맞추기) - 텍스트 없이 이모지 위주
+                { prompt: "'빨간색 세모'를 찾아줘!", answer: "🔺", options: ["🔺", "🟦", "🟡"] },
+                { prompt: "'파란색 네모'는 어디있을까?", answer: "🟦", options: ["🟦", "🔺", "⭐"] },
+                { prompt: "'노란색 동그라미'를 줘!", answer: "🟡", options: ["🟡", "🟩", "💜"] },
+                { prompt: "'초록색 별'이 반짝반짝!", answer: "⭐", options: ["⭐", "🔺", "🟠"] },
+                { prompt: "'보라색 하트'를 찾아라!", answer: "💜", options: ["💜", "🔷", "🟥"] },
+                { prompt: "뾰족뾰족 '세모'는?", answer: "🔺", options: ["🔺", "🟡", "🟥"] },
+                { prompt: "반듯반듯 '네모'는?", answer: "🟥", options: ["🟥", "🔺", "⭐"] },
+                { prompt: "동글동글 '동그라미'는?", answer: "🟡", options: ["🟡", "🟥", "🔷"] },
+                { prompt: "반짝반짝 '별' 모양은?", answer: "⭐", options: ["⭐", "💜", "🔺"] },
+                { prompt: "사랑해 '하트' 모양은?", answer: "💜", options: ["💜", "⭐", "🟡"] },
+                { prompt: "'주황색' 블록을 찾아줘", answer: "🟠", options: ["🟠", "🟦", "🟩"] },
+                { prompt: "'분홍색' 예쁜 블록", answer: "🩷", options: ["🩷", "🟡", "⬛"] }
             ],
-            level2: [ // 기초 패턴 (2~3개 반복)
-                { prompt: "빨강-노랑-빨강-[?]", answer: "🟡 노랑", options: ["🟡 노랑", "🔴 빨강", "🔵 파랑"] },
-                { prompt: "세모-네모-세모-[?]", answer: "🟥 네모", options: ["🟥 네모", "🔺 세모", "🟡 동그라미"] },
-                { prompt: "동그라미-동그라미-세모-[?]", answer: "🔺 세모", options: ["🔺 세모", "🟡 동그라미", "🟥 네모"] },
+            level2: [ // 기초 패턴 (2~3개 반복) - 힌트 제거
+                { prompt: "빨강-노랑-빨강-[?]", answer: "🟡", options: ["🟡", "🔴", "🔵"] },
+                { prompt: "세모-네모-세모-[?]", answer: "🟥", options: ["🟥", "🔺", "🟡"] },
+                { prompt: "동그라미-동그라미-세모-[?]", answer: "🔺", options: ["🔺", "🟡", "🟥"] },
                 { prompt: "1-2-1-[?]", answer: "2", options: ["2", "1", "3"] },
                 { prompt: "A-B-A-[?]", answer: "B", options: ["B", "A", "C"] },
                 { prompt: "크다-작다-크다-[?]", answer: "작다", options: ["작다", "크다", "길다"] },
                 { prompt: "위-아래-위-[?]", answer: "아래", options: ["아래", "위", "옆"] },
-                { prompt: "사과-포도-사과-[?]", answer: "🍇 포도", options: ["🍇 포도", "🍎 사과", "🍌 바나나"] },
-                { prompt: "강아지-고양이-강아지-[?]", answer: "🐱 고양이", options: ["🐱 고양이", "🐶 강아지", "🐷 돼지"] },
-                { prompt: "해-달-해-[?]", answer: "🌙 달", options: ["🌙 달", "☀️ 해", "☁️ 구름"] }
+                { prompt: "사과-포도-사과-[?]", answer: "🍇", options: ["🍇", "🍎", "🍌"] },
+                { prompt: "강아지-고양이-강아지-[?]", answer: "🐱", options: ["🐱", "🐶", "🐷"] },
+                { prompt: "해-달-해-[?]", answer: "🌙", options: ["🌙", "☀️", "☁️"] }
             ],
-            level3: [ // 심화 패턴 (4개 반복 - 외워야 함)
-                { prompt: "빨강-주황-노랑-초록-[?]", answer: "🔵 파랑", options: ["🔵 파랑", "🔴 빨강", "🟣 보라"] },
-                { prompt: "🔴-🟡-🟢-🔵-🔴-🟡-🟢-[?]", answer: "🔵 파랑", options: ["🔵 파랑", "🔴 빨강", "🟡 노랑"] },
-                { prompt: "🔺-🟥-🟡-⭐-🔺-🟥-🟡-[?]", answer: "⭐ 별", options: ["⭐ 별", "🔺 세모", "🟥 네모"] },
+            level3: [ // 심화 패턴 (4개 반복 - 외워야 함) - 힌트 제거
+                { prompt: "빨강-주황-노랑-초록-[?]", answer: "🔵", options: ["🔵", "🔴", "🟣"] },
+                { prompt: "🔴-🟡-🟢-🔵-🔴-🟡-🟢-[?]", answer: "🔵", options: ["🔵", "🔴", "🟡"] },
+                { prompt: "🔺-🟥-🟡-⭐-🔺-🟥-🟡-[?]", answer: "⭐", options: ["⭐", "🔺", "🟥"] },
                 { prompt: "1-2-3-4-1-2-3-[?]", answer: "4", options: ["4", "1", "2"] },
                 { prompt: "가-나-다-라-가-나-다-[?]", answer: "라", options: ["라", "가", "마"] },
-                { prompt: "봄-여름-가을-겨울-봄-여름-가을-[?]", answer: "❄️ 겨울", options: ["❄️ 겨울", "🌸 봄", "🌻 여름"] },
-                { prompt: "아침-점심-저녁-밤-아침-점심-저녁-[?]", answer: "🌙 밤", options: ["🌙 밤", "☀️ 아침", "🍱 점심"] },
+                { prompt: "봄-여름-가을-겨울-봄-여름-가을-[?]", answer: "❄️", options: ["❄️", "🌸", "🌻"] },
+                { prompt: "아침-점심-저녁-밤-아침-점심-저녁-[?]", answer: "🌙", options: ["🌙", "☀️", "🍱"] },
                 { prompt: "A-B-C-D-A-B-C-[?]", answer: "D", options: ["D", "A", "E"] },
-                { prompt: "동그라미-세모-네모-별-동그라미-세모-네모-[?]", answer: "⭐ 별", options: ["⭐ 별", "🟡 동그라미", "🔺 세모"] },
-                { prompt: "🍎-🍌-🍇-🍊-🍎-🍌-🍇-[?]", answer: "🍊 귤", options: ["🍊 귤", "🍎 사과", "🍌 바나나"] }
+                { prompt: "동그라미-세모-네모-별-동그라미-세모-네모-[?]", answer: "⭐", options: ["⭐", "🟡", "🔺"] },
+                { prompt: "🍎-🍌-🍇-🍊-🍎-🍌-🍇-[?]", answer: "🍊", options: ["🍊", "🍎", "🍌"] }
             ]
         };
 
@@ -365,6 +361,9 @@
           const [swallowedWord, setSwallowedWord] = useState('');
           const [wrongWord, setWrongWord] = useState(null);
           
+          // [추가] 쩝쩝이 변신용 모양 상태
+          const [jeopShapeStyle, setJeopShapeStyle] = useState('rounded-[30%_70%_70%_30%_/_30%_30%_70%_70%]'); 
+
           const [isMusicPlaying, setIsMusicPlaying] = useState(false);
           const [showDebug, setShowDebug] = useState(false);
           const [audioPath, setAudioPath] = useState(''); 
@@ -374,6 +373,7 @@
           // 미니게임용 상태
           const [collectedWords, setCollectedWords] = useState([]);
           const [digestBubbles, setDigestBubbles] = useState([]);
+          const [timeLeft, setTimeLeft] = useState(30); // [추가] 30초 타이머
 
           const getStyles = () => {
               if (selectedChar === 'nyam') {
@@ -410,12 +410,12 @@
                       text: "text-orange-600",
                       lightBg: "bg-orange-50",
                       label: "쩝쩝이",
-                      shape: "w-32 h-32 animate-morph", 
+                      shape: `w-32 h-32 transition-all duration-500 ${jeopShapeStyle}`, // [수정] 변신 스타일 적용
                       eye: "w-5 h-5 bg-white rounded-full",
                       levels: [
-                          { size: 'w-32 h-32', desc: '블록과 색깔' },
-                          { size: 'w-40 h-40', desc: '기초 패턴' },
-                          { size: 'w-48 h-48', desc: '심화 패턴' }
+                          { size: 'w-32 h-32', desc: '모양과 색깔' },
+                          { size: 'w-40 h-40', desc: '기초 패턴 (2~3개)' },
+                          { size: 'w-48 h-48', desc: '심화 패턴 (4개)' }
                       ]
                   };
               }
@@ -461,11 +461,46 @@
           useEffect(() => {
               if(audioRef.current && audioPath) {
                   addLog(`경로 설정: ${audioPath}`);
-                  if (audioRef.current.src !== new URL(audioPath, window.location.href).href) {
+                  const currentSrc = audioRef.current.getAttribute('src');
+                  if (currentSrc !== audioPath) {
                       audioRef.current.src = audioPath;
+                      const playPromise = audioRef.current.play();
+                      if (playPromise !== undefined) {
+                          playPromise.catch(e => {
+                              addLog(`자동 재생 실패: ${e.name}`);
+                              setIsMusicPlaying(false);
+                          });
+                      }
                   }
               }
           }, [audioPath]);
+
+          // [추가] 타이머 로직
+          useEffect(() => {
+              let timerId;
+              if (gameState === 'digesting') {
+                  setTimeLeft(30);
+                  timerId = setInterval(() => {
+                      setTimeLeft((prev) => {
+                          if (prev <= 1) {
+                              clearInterval(timerId);
+                              handleDigestFail();
+                              return 0;
+                          }
+                          return prev - 1;
+                      });
+                  }, 1000);
+              }
+              return () => clearInterval(timerId);
+          }, [gameState]);
+
+          const handleDigestFail = () => {
+              alert("시간 초과! 배탈이 났어요 ㅠㅠ");
+              setExp(0);
+              setCollectedWords([]);
+              setGameState('playing');
+              // 레벨 초기화는 아님, 해당 레벨 경험치만 초기화
+          };
 
           const toggleMusic = () => {
             if (!audioRef.current) return;
@@ -596,6 +631,9 @@
               if (char === 'nyom') bgmFile = 'bgm2.mp3';
               if (char === 'jeop') bgmFile = 'bgm3.mp3';
               
+              // [추가] 쩝쩝이 초기 모양 설정
+              if (char === 'jeop') setJeopShapeStyle('rounded-[30%_70%_70%_30%_/_30%_30%_70%_70%]');
+
               const newPath = `public/music/${bgmFile}`;
               setAudioPath(newPath);
               if (audioRef.current) {
@@ -634,6 +672,16 @@
               
               setCollectedWords(prev => [...prev, selectedOption]);
               
+              // [추가] 쩝쩝이 레벨 1 변신 로직
+              if (selectedChar === 'jeop' && level === 1) {
+                  if (selectedOption.includes('🔺') || selectedOption.includes('세모')) setJeopShapeStyle('clip-path-triangle bg-red-400 rounded-none');
+                  else if (selectedOption.includes('🟥') || selectedOption.includes('네모')) setJeopShapeStyle('rounded-none bg-blue-400');
+                  else if (selectedOption.includes('🟡') || selectedOption.includes('동그라미')) setJeopShapeStyle('rounded-full bg-yellow-400');
+                  else if (selectedOption.includes('⭐') || selectedOption.includes('별')) setJeopShapeStyle('clip-path-star bg-yellow-300 rounded-none');
+                  else if (selectedOption.includes('💜') || selectedOption.includes('하트')) setJeopShapeStyle('clip-path-heart bg-purple-400 rounded-none');
+                  else setJeopShapeStyle('animate-morph'); // 기본
+              }
+
               setTimeout(() => {
                 setMonsterState('happy');
                 playSound('happy');
@@ -644,7 +692,7 @@
 
                 setTimeout(() => {
                   if (newExp >= maxExpPerLevel) {
-                    // [수정] 쩝쩝이도 소화시키기 게임으로 통일
+                    // 모든 캐릭터 소화시키기 게임으로 통일
                     startDigestion();
                   } else {
                     nextQuestion();
@@ -746,6 +794,7 @@
           );
 
           if (gameState === 'characterSelect') {
+              // ... 기존 코드 유지
               return (
                   <div className="flex flex-col items-center justify-center h-full w-full max-w-4xl mx-auto p-6 relative">
                       {renderOverlayControls()}
@@ -784,6 +833,7 @@
           }
 
           if (gameState === 'menu') {
+            // ... 기존 코드 유지
             return (
               <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 relative ${currentStyle.lightBg}`}>
                 {renderOverlayControls()}
@@ -824,6 +874,7 @@
           }
 
           if (gameState === 'levelSelect') {
+            // ... 기존 코드 유지
             return (
                 <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 ${currentStyle.lightBg}`}>
                     {renderOverlayControls()}
@@ -852,28 +903,56 @@
             );
           }
 
+          // [수정] 소화시키기(미니게임) 화면 - UI 개선 및 타이머
           if (gameState === 'digesting') {
               return (
                   <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 relative overflow-hidden ${currentStyle.lightBg}`}>
                       {renderOverlayControls()}
-                      <h2 className="text-3xl font-extrabold text-gray-800 mb-2 z-10">꺼억~ 소화시키자!</h2>
-                      <p className="text-lg text-gray-600 mb-8 z-10">방울을 눌러서 터트려주세요!</p>
-                      {digestBubbles.map((bubble) => (
-                          <button
-                              key={bubble.id}
-                              onClick={() => handlePopBubble(bubble.id)}
-                              className={`absolute rounded-full flex items-center justify-center shadow-lg cursor-pointer animate-float border-4 border-white/50 active:scale-95 hover:scale-110 transition-transform ${selectedChar === 'nyam' ? 'bg-green-400 text-white' : selectedChar === 'nyom' ? 'bg-cyan-400 text-white' : 'bg-orange-400 text-white'}`}
-                              style={{ left: `${bubble.x}%`, top: `${bubble.y}%`, width: `${bubble.size}px`, height: `${bubble.size}px`, animationDuration: bubble.speed, animationDelay: bubble.delay, fontSize: '1.2rem', fontWeight: 'bold' }}
-                          >
-                              {bubble.word}
-                          </button>
-                      ))}
-                      {digestBubbles.length === 0 && <div className="z-20 text-4xl animate-bounce">👍 완료!</div>}
+                      
+                      {/* 타이머 표시 */}
+                      <div className="absolute top-6 left-6 z-30 flex items-center gap-2 bg-white/80 px-4 py-2 rounded-full shadow-sm">
+                          <Timer className={timeLeft <= 10 ? 'text-red-500 animate-pulse' : 'text-gray-600'} />
+                          <span className={`text-xl font-bold ${timeLeft <= 10 ? 'text-red-500' : 'text-gray-700'}`}>{timeLeft}초</span>
+                      </div>
+
+                      {/* 배경 텍스트 (방해되지 않게) */}
+                      <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-0 opacity-10 text-center pointer-events-none">
+                          <h2 className="text-6xl md:text-8xl font-black text-gray-800 mb-4 whitespace-nowrap">꺼억~</h2>
+                          <p className="text-3xl md:text-5xl font-bold text-gray-600 whitespace-nowrap">소화시키자!</p>
+                      </div>
+                      
+                      {/* 방울들 (z-index 높임) */}
+                      <div className="z-10 w-full h-full relative">
+                          {digestBubbles.map((bubble) => (
+                              <button
+                                  key={bubble.id}
+                                  onClick={() => handlePopBubble(bubble.id)}
+                                  className={`absolute rounded-full flex items-center justify-center shadow-lg cursor-pointer animate-float border-4 border-white/50 active:scale-95 hover:scale-110 transition-transform ${selectedChar === 'nyam' ? 'bg-green-400 text-white' : selectedChar === 'nyom' ? 'bg-cyan-400 text-white' : 'bg-orange-400 text-white'}`}
+                                  style={{
+                                      left: `${bubble.x}%`,
+                                      top: `${bubble.y}%`,
+                                      width: `${bubble.size}px`,
+                                      height: `${bubble.size}px`,
+                                      animationDuration: bubble.speed,
+                                      animationDelay: bubble.delay,
+                                      fontSize: '1.2rem',
+                                      fontWeight: 'bold'
+                                  }}
+                              >
+                                  {bubble.word}
+                              </button>
+                          ))}
+                      </div>
+                      
+                      {digestBubbles.length === 0 && (
+                          <div className="z-30 text-4xl animate-bounce font-bold text-green-600 bg-white/80 px-6 py-3 rounded-xl shadow-lg">👍 소화 완료!</div>
+                      )}
                   </div>
               );
           }
 
           if (gameState === 'clear') {
+            // ... 기존 코드 유지
             return (
               <div className="flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 text-center bg-purple-50">
                 {renderOverlayControls()}
@@ -906,6 +985,7 @@
           const displayPrompt = currentData ? (currentData.display || currentData.prompt) : "";
           const progressPercent = (exp / maxExpPerLevel) * 100;
 
+          // 5. 게임 플레이 화면 (반응형 텍스트 크기 적용)
           return (
             <div className={`flex flex-col h-full w-full max-w-3xl mx-auto p-4 md:p-8 rounded-3xl shadow-2xl my-4 relative overflow-hidden justify-between ${currentStyle.lightBg}`}>
               <div className="flex justify-between items-center bg-white p-4 md:p-6 rounded-3xl shadow-md z-10 w-full mb-4">
@@ -948,11 +1028,17 @@
                 <div className={`
                   relative transition-all duration-700 ease-in-out flex flex-col items-center justify-center shadow-xl transform scale-100 md:scale-125
                   ${currentStyle.levels[level-1].size} ${currentStyle.bg} 
-                  ${selectedChar === 'nyom' ? 'rounded-[3rem] animate-jelly' : selectedChar === 'jeop' ? 'animate-morph' : 'rounded-full'}
+                  ${selectedChar === 'nyom' ? 'rounded-[3rem] animate-jelly' : selectedChar === 'jeop' ? jeopShapeStyle : 'rounded-full'}
                   ${monsterState === 'sad' ? 'animate-shake bg-gray-400' : ''}
                   ${monsterState === 'happy' ? 'animate-bounce' : ''}
                   ${monsterState === 'levelup' ? 'animate-levelup bg-yellow-300' : ''}
-                `}>
+                `}
+                style={selectedChar === 'jeop' && jeopShapeStyle.includes('clip-path') ? { 
+                    clipPath: jeopShapeStyle.includes('triangle') ? 'polygon(50% 0%, 0% 100%, 100% 100%)' :
+                              jeopShapeStyle.includes('star') ? 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)' :
+                              jeopShapeStyle.includes('heart') ? 'path("M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z")' : 'none'
+                } : {}}
+                >
                   {level === 3 && monsterState === 'happy' && (
                     <div className="absolute -top-10 animate-bounce transition-opacity duration-500">
                       <Crown className="text-yellow-400 fill-yellow-400 drop-shadow-md w-12 h-12" />
