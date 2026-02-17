@@ -71,7 +71,7 @@
         .animate-pop { animation: pop 0.3s ease-out forwards; }
     </style>
 </head>
-<body class="bg-slate-100 selection:bg-green-200 h-screen overflow-hidden flex items-center justify-center">
+<body class="bg-slate-100 selection:bg-green-200 h-[100dvh] w-screen overflow-hidden flex items-center justify-center">
     <div id="root" class="w-full h-full"></div>
 
     <script type="text/babel">
@@ -99,7 +99,7 @@
 
         // --- [1. 데이터 및 로직] ---
         
-        // 1-A. 냠냠이 (단어) 데이터
+        // 1-A. 냠냠이 (단어) 데이터 - 20문제씩 추가
         const WORD_DATA = {
           level1: [ 
             { prompt: "'멍멍' 짖는 동물은?", answer: "강아지", options: ["강아지", "고양이", "병아리"] },
@@ -149,7 +149,28 @@
             { prompt: "텔레비전을 보는 곳!", answer: "거실", options: ["거실", "부엌", "화장실"] },
             { prompt: "음식을 '보글보글' 요리해요!", answer: "부엌", options: ["부엌", "안방", "현관"] },
             { prompt: "응가와 쉬를 해요", answer: "화장실", options: ["화장실", "베란다", "거실"] },
-            { prompt: "집에 들어오는 문", answer: "현관", options: ["현관", "창문", "벽"] }
+            { prompt: "집에 들어오는 문", answer: "현관", options: ["현관", "창문", "벽"] },
+            // 추가된 문제들
+            { prompt: "바다에 사는 커다란 '물고기'", answer: "고래", options: ["고래", "상어", "문어"] },
+            { prompt: "다리가 8개인 바다 동물", answer: "문어", options: ["문어", "오징어", "꽃게"] },
+            { prompt: "옆으로 걷는 바다 동물", answer: "꽃게", options: ["꽃게", "새우", "조개"] },
+            { prompt: "비가 오면 생기는 '물웅덩이'", answer: "물웅덩이", options: ["물웅덩이", "강", "바다"] },
+            { prompt: "하늘에 떠 있는 '흰색 솜사탕'", answer: "구름", options: ["구름", "해", "달"] },
+            { prompt: "밤하늘에 '반짝반짝' 빛나요", answer: "별", options: ["별", "달", "해"] },
+            { prompt: "나무에 열리는 '밤'", answer: "밤", options: ["밤", "도토리", "사과"] },
+            { prompt: "다람쥐가 좋아하는 '도토리'", answer: "도토리", options: ["도토리", "밤", "은행"] },
+            { prompt: "노란색 은행잎이 떨어지는 나무", answer: "은행나무", options: ["은행나무", "단풍나무", "소나무"] },
+            { prompt: "빨간색 잎이 예쁜 나무", answer: "단풍나무", options: ["단풍나무", "은행나무", "벚나무"] },
+            { prompt: "봄에 피는 분홍색 꽃", answer: "벚꽃", options: ["벚꽃", "개나리", "진달래"] },
+            { prompt: "봄에 피는 노란색 꽃", answer: "개나리", options: ["개나리", "벚꽃", "장미"] },
+            { prompt: "여름에 피는 커다란 꽃", answer: "해바라기", options: ["해바라기", "장미", "코스모스"] },
+            { prompt: "가을에 피는 하늘하늘 꽃", answer: "코스모스", options: ["코스모스", "국화", "해바라기"] },
+            { prompt: "겨울에 내리는 하얀 눈사람", answer: "눈", options: ["눈", "비", "우박"] },
+            { prompt: "추울 때 입는 두꺼운 옷", answer: "패딩", options: ["패딩", "반팔", "수영복"] },
+            { prompt: "더울 때 먹는 시원한 음식", answer: "아이스크림", options: ["아이스크림", "붕어빵", "호떡"] },
+            { prompt: "겨울에 먹는 따뜻한 간식", answer: "붕어빵", options: ["붕어빵", "아이스크림", "빙수"] },
+            { prompt: "생일 축하할 때 먹는 빵", answer: "케이크", options: ["케이크", "식빵", "도넛"] },
+            { prompt: "아침에 마시는 하얀 물", answer: "우유", options: ["우유", "주스", "콜라"] }
           ],
           level2: [ // 반대말
             { prompt: "아이스크림은 '차갑다'! 반대는?", answer: "뜨겁다", options: ["뜨겁다", "작다", "멀다"] },
@@ -189,7 +210,28 @@
             { prompt: "돌은 '딱딱하다'! 반대는?", answer: "말랑하다", options: ["말랑하다", "뾰족하다", "거칠다"] },
             { prompt: "젤리는 '말랑하다'! 반대는?", answer: "딱딱하다", options: ["딱딱하다", "부드럽다", "질기다"] },
             { prompt: "친구가 '좋다'! 반대는?", answer: "싫다", options: ["싫다", "나쁘다", "밉다"] },
-            { prompt: "그림 그리기는 '재밌다'! 반대는?", answer: "지루하다", options: ["지루하다", "신나다", "즐겁다"] }
+            { prompt: "그림 그리기는 '재밌다'! 반대는?", answer: "지루하다", options: ["지루하다", "신나다", "즐겁다"] },
+            // 추가된 문제들
+            { prompt: "솜사탕은 '부드럽다'! 반대는?", answer: "거칠다", options: ["거칠다", "달콤하다", "하얗다"] },
+            { prompt: "나무껍질은 '거칠다'! 반대는?", answer: "부드럽다", options: ["부드럽다", "단단하다", "무섭다"] },
+            { prompt: "연필이 '뾰족하다'! 반대는?", answer: "뭉뚝하다", options: ["뭉뚝하다", "날카롭다", "길다"] },
+            { prompt: "길이 '넓다'! 반대는?", answer: "좁다", options: ["좁다", "크다", "길다"] },
+            { prompt: "골목이 '좁다'! 반대는?", answer: "넓다", options: ["넓다", "작다", "막히다"] },
+            { prompt: "물이 '깊다'! 반대는?", answer: "얕다", options: ["얕다", "넓다", "맑다"] },
+            { prompt: "냇물이 '얕다'! 반대는?", answer: "깊다", options: ["깊다", "흐르다", "차갑다"] },
+            { prompt: "이 줄은 '굵다'! 반대는?", answer: "가늘다", options: ["가늘다", "짧다", "길다"] },
+            { prompt: "실은 '가늘다'! 반대는?", answer: "굵다", options: ["굵다", "약하다", "길다"] },
+            { prompt: "옷이 '젖다'! 반대는?", answer: "마르다", options: ["마르다", "입다", "빨다"] },
+            { prompt: "빨래가 '마르다'! 반대는?", answer: "젖다", options: ["젖다", "개다", "널다"] },
+            { prompt: "풍선이 '터지다'! 반대는?", answer: "불다", options: ["불다", "날다", "작다"] },
+            { prompt: "불을 '켜다'! 반대는?", answer: "끄다", options: ["끄다", "피우다", "보다"] },
+            { prompt: "촛불을 '끄다'! 반대는?", answer: "켜다", options: ["켜다", "불다", "잡다"] },
+            { prompt: "물건을 '사다'! 반대는?", answer: "팔다", options: ["팔다", "주다", "받다"] },
+            { prompt: "가게에서 '팔다'! 반대는?", answer: "사다", options: ["사다", "먹다", "놀다"] },
+            { prompt: "공을 '던지다'! 반대는?", answer: "받다", options: ["받다", "차다", "굴리다"] },
+            { prompt: "선물을 '주다'! 반대는?", answer: "받다", options: ["받다", "사다", "보내다"] },
+            { prompt: "소리가 '크다'! 반대는?", answer: "작다", options: ["작다", "높다", "길다"] },
+            { prompt: "목소리가 '작다'! 반대는?", answer: "크다", options: ["크다", "예쁘다", "좋다"] }
           ],
           level3: [ // 문장 완성 (주어/목적어 + 서술어)
             { prompt: "'나비가' 팔랑팔랑~", answer: "날아요", options: ["날아요", "헤엄쳐요", "굴러가요"] },
@@ -225,11 +267,32 @@
             { prompt: "'전화를' 여보세요?", answer: "받아요", options: ["받아요", "걸어요", "끊어요"] },
             { prompt: "'버스를' 정류장에서~", answer: "타요", options: ["타요", "밀어요", "봐요"] },
             { prompt: "'숙제를' 열심히~", answer: "해요", options: ["해요", "놀아요", "자요"] },
-            { prompt: "'청소를' 깨끗하게~", answer: "해요", options: ["해요", "어질러요", "버려요"] }
+            { prompt: "'청소를' 깨끗하게~", answer: "해요", options: ["해요", "어질러요", "버려요"] },
+            // 추가된 문제들
+            { prompt: "'우산을' 활짝~", answer: "펴요", options: ["펴요", "접어요", "써요"] },
+            { prompt: "'가방을' 등에~", answer: "메요", options: ["메요", "들어요", "입어요"] },
+            { prompt: "'문을' 똑똑~", answer: "두드려요", options: ["두드려요", "열어요", "닫아요"] },
+            { prompt: "'창문을' 활짝~", answer: "열어요", options: ["열어요", "닫아요", "깨요"] },
+            { prompt: "'불을' 환하게~", answer: "켜요", options: ["켜요", "꺼요", "봐요"] },
+            { prompt: "'텔레비전을' 재미있게~", answer: "봐요", options: ["봐요", "들어요", "먹어요"] },
+            { prompt: "'피아노를' 딩동댕~", answer: "쳐요", options: ["쳐요", "불어요", "타요"] },
+            { prompt: "'북을' 둥둥둥~", answer: "쳐요", options: ["쳐요", "불어요", "밀어요"] },
+            { prompt: "'풍선을' 후~", answer: "불어요", options: ["불어요", "터뜨려요", "날려요"] },
+            { prompt: "'종이비행기를' 슈웅~", answer: "날려요", options: ["날려요", "접어요", "찢어요"] },
+            { prompt: "'색종이를' 예쁘게~", answer: "접어요", options: ["접어요", "구겨요", "버려요"] },
+            { prompt: "'가위로' 싹둑싹둑~", answer: "잘라요", options: ["잘라요", "붙여요", "그려요"] },
+            { prompt: "'풀로' 꾹꾹~", answer: "붙여요", options: ["붙여요", "떼요", "발라요"] },
+            { prompt: "'연필로' 글씨를~", answer: "써요", options: ["써요", "지워요", "읽어요"] },
+            { prompt: "'지우개로' 쓱싹쓱싹~", answer: "지워요", options: ["지워요", "써요", "그려요"] },
+            { prompt: "'물건을' 시장에서~", answer: "사요", options: ["사요", "팔아요", "주워요"] },
+            { prompt: "'돈을' 저금통에~", answer: "넣어요", options: ["넣어요", "꺼내요", "버려요"] },
+            { prompt: "'쓰레기를' 휴지통에~", answer: "버려요", options: ["버려요", "주워요", "모아요"] },
+            { prompt: "'장난감을' 상자에~", answer: "담아요", options: ["담아요", "쏟아요", "던져요"] },
+            { prompt: "'이불을' 반듯하게~", answer: "개요", options: ["개요", "펴요", "덮어요"] }
           ]
         };
 
-        // 3. 쩝쩝이 (도형/색깔) 데이터 - 레벨 및 패턴 개편
+        // 3. 쩝쩝이 (도형/색깔) 데이터 - 레벨 및 패턴 개편 (빈칸 위치 다양화)
         const JEOP_DATA = {
             level1: [ // 모양과 색깔 (블록 맞추기) - 텍스트 없이 이모지 위주
                 { prompt: "'빨간색 세모'를 찾아줘!", answer: "🔺", options: ["🔺", "🟦", "🟡"] },
@@ -243,9 +306,30 @@
                 { prompt: "반짝반짝 '별' 모양은?", answer: "⭐", options: ["⭐", "💜", "🔺"] },
                 { prompt: "사랑해 '하트' 모양은?", answer: "💜", options: ["💜", "⭐", "🟡"] },
                 { prompt: "'주황색' 블록을 찾아줘", answer: "🟠", options: ["🟠", "🟦", "🟩"] },
-                { prompt: "'분홍색' 예쁜 블록", answer: "🩷", options: ["🩷", "🟡", "⬛"] }
+                { prompt: "'분홍색' 예쁜 블록", answer: "🩷", options: ["🩷", "🟡", "⬛"] },
+                // 추가 20문제
+                { prompt: "'검정색 네모'는 어디?", answer: "⬛", options: ["⬛", "⬜", "🟥"] },
+                { prompt: "'하얀색 네모'를 찾아라", answer: "⬜", options: ["⬜", "⬛", "🟦"] },
+                { prompt: "'파란색 다이아몬드' 모양", answer: "🔷", options: ["🔷", "🔶", "🔺"] },
+                { prompt: "'주황색 다이아몬드' 모양", answer: "🔶", options: ["🔶", "🔷", "⭐"] },
+                { prompt: "초록색 네모 찾아줘", answer: "🟩", options: ["🟩", "🟥", "🟦"] },
+                { prompt: "'갈색 동그라미'는?", answer: "🟤", options: ["🟤", "⚫", "⚪"] },
+                { prompt: "'검정색 동그라미'는?", answer: "⚫", options: ["⚫", "⚪", "🔴"] },
+                { prompt: "'하얀색 동그라미'는?", answer: "⚪", options: ["⚪", "⚫", "🔵"] },
+                { prompt: "'빨간색 동그라미'는?", answer: "🔴", options: ["🔴", "🔵", "🟡"] },
+                { prompt: "'파란색 동그라미'는?", answer: "🔵", options: ["🔵", "🔴", "🟢"] },
+                { prompt: "'보라색 동그라미'는?", answer: "🟣", options: ["🟣", "🟠", "🟡"] },
+                { prompt: "'노란색 네모'는?", answer: "🟨", options: ["🟨", "🟧", "🟥"] },
+                { prompt: "'주황색 네모'는?", answer: "🟧", options: ["🟧", "🟨", "🟦"] },
+                { prompt: "세모난 '수박' 조각", answer: "🍉", options: ["🍉", "🍊", "🍋"] },
+                { prompt: "동그란 '사과'", answer: "🍎", options: ["🍎", "🍌", "🍇"] },
+                { prompt: "길쭉한 '바나나'", answer: "🍌", options: ["🍌", "🍎", "🍊"] },
+                { prompt: "별 모양 '불가사리'", answer: "⭐", options: ["⭐", "🐟", "🐙"] },
+                { prompt: "하트 모양 '풍선'", answer: "🎈", options: ["🎈", "🎀", "🎁"] },
+                { prompt: "네모난 '선물상자'", answer: "🎁", options: ["🎁", "🎈", "🎉"] },
+                { prompt: "동그란 '축구공'", answer: "⚽", options: ["⚽", "🏈", "🏸"] }
             ],
-            level2: [ // 기초 패턴 (2~3개 반복) - 힌트 제거
+            level2: [ // 기초 패턴 (2~3개 반복) - 빈칸 위치 다양화
                 { prompt: "빨강-노랑-빨강-[?]", answer: "🟡", options: ["🟡", "🔴", "🔵"] },
                 { prompt: "세모-네모-세모-[?]", answer: "🟥", options: ["🟥", "🔺", "🟡"] },
                 { prompt: "동그라미-동그라미-세모-[?]", answer: "🔺", options: ["🔺", "🟡", "🟥"] },
@@ -255,9 +339,30 @@
                 { prompt: "위-아래-위-[?]", answer: "아래", options: ["아래", "위", "옆"] },
                 { prompt: "사과-포도-사과-[?]", answer: "🍇", options: ["🍇", "🍎", "🍌"] },
                 { prompt: "강아지-고양이-강아지-[?]", answer: "🐱", options: ["🐱", "🐶", "🐷"] },
-                { prompt: "해-달-해-[?]", answer: "🌙", options: ["🌙", "☀️", "☁️"] }
+                { prompt: "해-달-해-[?]", answer: "🌙", options: ["🌙", "☀️", "☁️"] },
+                // 추가 20문제 (중간/앞 빈칸 포함)
+                { prompt: "🔴-🔵-[?]-🔵-🔴-🔵", answer: "🔴", options: ["🔴", "🔵", "🟡"] },
+                { prompt: "🔺-[?]-🔺-⭐-🔺-⭐", answer: "⭐", options: ["⭐", "🔺", "🟥"] },
+                { prompt: "[?]-🐶-🐱-🐶-🐱-🐶", answer: "🐱", options: ["🐱", "🐶", "🐭"] },
+                { prompt: "1-2-[?]-1-2-3", answer: "3", options: ["3", "1", "2"] }, // 1-2-3 패턴
+                { prompt: "A-A-B-[?]-A-B", answer: "A", options: ["A", "B", "C"] },
+                { prompt: "🍎-[?]-🍎-🍌-🍎-🍌", answer: "🍌", options: ["🍌", "🍎", "🍇"] },
+                { prompt: "☀️-☁️-☀️-[?]-☀️-☁️", answer: "☁️", options: ["☁️", "☀️", "🌧️"] },
+                { prompt: "[?]-🟥-🟡-🟥-🟡-🟥", answer: "🟡", options: ["🟡", "🟥", "🟦"] },
+                { prompt: "가-나-[?]-나-가-나", answer: "가", options: ["가", "나", "다"] },
+                { prompt: "봄-여름-[?]-겨울", answer: "가을", options: ["가을", "봄", "여름"] },
+                { prompt: "아침-[?]-저녁-밤", answer: "점심", options: ["점심", "아침", "새벽"] },
+                { prompt: "10-20-[?]-40", answer: "30", options: ["30", "20", "50"] },
+                { prompt: "월-화-[?]-목-금", answer: "수", options: ["수", "토", "일"] },
+                { prompt: "도-레-미-[?]-솔", answer: "파", options: ["파", "시", "도"] },
+                { prompt: "🟣-🟣-🟠-[?]-🟣-🟠", answer: "🟣", options: ["🟣", "🟠", "🟡"] },
+                { prompt: "⭐-🌙-[?]-🌙-⭐-🌙", answer: "⭐", options: ["⭐", "🌙", "☀️"] },
+                { prompt: "큰거-작은거-[?]-작은거", answer: "큰거", options: ["큰거", "작은거", "긴거"] },
+                { prompt: "긴거-짧은거-[?]-짧은거", answer: "긴거", options: ["긴거", "짧은거", "굵은거"] },
+                { prompt: "😊-😡-😊-[?]", answer: "😡", options: ["😡", "😊", "😭"] },
+                { prompt: "👍-👎-[?]-👎", answer: "👍", options: ["👍", "👎", "👊"] }
             ],
-            level3: [ // 심화 패턴 (4개 반복 - 외워야 함) - 힌트 제거
+            level3: [ // 심화 패턴 (4개 반복 - 외워야 함) - 빈칸 위치 다양화
                 { prompt: "빨강-주황-노랑-초록-[?]", answer: "🔵", options: ["🔵", "🔴", "🟣"] },
                 { prompt: "🔴-🟡-🟢-🔵-🔴-🟡-🟢-[?]", answer: "🔵", options: ["🔵", "🔴", "🟡"] },
                 { prompt: "🔺-🟥-🟡-⭐-🔺-🟥-🟡-[?]", answer: "⭐", options: ["⭐", "🔺", "🟥"] },
@@ -267,7 +372,28 @@
                 { prompt: "아침-점심-저녁-밤-아침-점심-저녁-[?]", answer: "🌙", options: ["🌙", "☀️", "🍱"] },
                 { prompt: "A-B-C-D-A-B-C-[?]", answer: "D", options: ["D", "A", "E"] },
                 { prompt: "동그라미-세모-네모-별-동그라미-세모-네모-[?]", answer: "⭐", options: ["⭐", "🟡", "🔺"] },
-                { prompt: "🍎-🍌-🍇-🍊-🍎-🍌-🍇-[?]", answer: "🍊", options: ["🍊", "🍎", "🍌"] }
+                { prompt: "🍎-🍌-🍇-🍊-🍎-🍌-🍇-[?]", answer: "🍊", options: ["🍊", "🍎", "🍌"] },
+                // 추가 20문제
+                { prompt: "🔴-🟡-🔴-🔵-[?]-🟡-🔴-🔵", answer: "🔴", options: ["🔴", "🔵", "🟡"] }, // 🔴🟡🔴🔵 패턴
+                { prompt: "🐶-🐱-🐭-🐹-🐶-🐱-[?]-🐹", answer: "🐭", options: ["🐭", "🐱", "🐰"] },
+                { prompt: "1-3-5-7-[?]-3-5-7", answer: "1", options: ["1", "9", "3"] },
+                { prompt: "아-야-어-[?]-아-야-어-여", answer: "여", options: ["여", "우", "이"] },
+                { prompt: "A-C-E-G-A-[?]-E-G", answer: "C", options: ["C", "B", "D"] },
+                { prompt: "⚽-⚾-🏀-🏐-[?]-⚾-🏀-🏐", answer: "⚽", options: ["⚽", "🏈", "🎱"] },
+                { prompt: "🚗-🚕-🚙-🚌-[?]-🚕-🚙-🚌", answer: "🚗", options: ["🚗", "🚲", "🚓"] },
+                { prompt: "🟥-🟧-🟨-🟩-[?]-🟧-🟨-🟩", answer: "🟥", options: ["🟥", "🟦", "🟣"] },
+                { prompt: "👆-👇-👈-[?]-👆-👇-👈-👉", answer: "👉", options: ["👉", "👆", "🖐️"] },
+                { prompt: "☀️-☁️-🌧️-❄️-☀️-[?]-🌧️-❄️", answer: "☁️", options: ["☁️", "⚡", "🌈"] },
+                { prompt: "10-20-30-40-[?]-20-30-40", answer: "10", options: ["10", "50", "0"] },
+                { prompt: "월-수-금-일-월-[?]-금-일", answer: "수", options: ["수", "화", "목"] },
+                { prompt: "도-미-솔-도-[?]-미-솔-도", answer: "도", options: ["도", "레", "시"] },
+                { prompt: "❤️-🧡-💛-💚-❤️-🧡-[?]-💚", answer: "💛", options: ["💛", "💙", "💜"] },
+                { prompt: "😀-😢-😡-😮-[?]-😢-😡-😮", answer: "😀", options: ["😀", "😎", "😴"] },
+                { prompt: "🥛-🧃-☕-🍵-🥛-[?]-☕-🍵", answer: "🧃", options: ["🧃", "🍺", "🍷"] },
+                { prompt: "일-이-삼-사-[?]-이-삼-사", answer: "일", options: ["일", "오", "영"] },
+                { prompt: "하나-둘-셋-넷-하나-[?]-셋-넷", answer: "둘", options: ["둘", "다섯", "여섯"] },
+                { prompt: "첫째-둘째-셋째-넷째-[?]-둘째-셋째-넷째", answer: "첫째", options: ["첫째", "다섯째", "막내"] },
+                { prompt: "봄-가을-겨울-여름-[?]-가을-겨울-여름", answer: "봄", options: ["봄", "계절", "하늘"] } // 순서 섞기
             ]
         };
 
@@ -794,7 +920,6 @@
           );
 
           if (gameState === 'characterSelect') {
-              // ... 기존 코드 유지
               return (
                   <div className="flex flex-col items-center justify-center h-full w-full max-w-4xl mx-auto p-6 relative">
                       {renderOverlayControls()}
@@ -833,7 +958,6 @@
           }
 
           if (gameState === 'menu') {
-            // ... 기존 코드 유지
             return (
               <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 relative ${currentStyle.lightBg}`}>
                 {renderOverlayControls()}
@@ -874,7 +998,6 @@
           }
 
           if (gameState === 'levelSelect') {
-            // ... 기존 코드 유지
             return (
                 <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 ${currentStyle.lightBg}`}>
                     {renderOverlayControls()}
@@ -903,7 +1026,6 @@
             );
           }
 
-          // [수정] 소화시키기(미니게임) 화면 - UI 개선 및 타이머
           if (gameState === 'digesting') {
               return (
                   <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 relative overflow-hidden ${currentStyle.lightBg}`}>
@@ -952,7 +1074,6 @@
           }
 
           if (gameState === 'clear') {
-            // ... 기존 코드 유지
             return (
               <div className="flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 text-center bg-purple-50">
                 {renderOverlayControls()}
@@ -985,9 +1106,8 @@
           const displayPrompt = currentData ? (currentData.display || currentData.prompt) : "";
           const progressPercent = (exp / maxExpPerLevel) * 100;
 
-          // 5. 게임 플레이 화면 (반응형 텍스트 크기 적용)
           return (
-            <div className={`flex flex-col h-full w-full max-w-3xl mx-auto p-4 md:p-8 rounded-3xl shadow-2xl my-4 relative overflow-hidden justify-between ${currentStyle.lightBg}`}>
+            <div className={`flex flex-col h-full w-full max-w-4xl mx-auto p-4 md:p-6 rounded-3xl shadow-2xl my-auto relative overflow-hidden justify-between ${currentStyle.lightBg}`}>
               <div className="flex justify-between items-center bg-white p-4 md:p-6 rounded-3xl shadow-md z-10 w-full mb-4">
                 <div className="flex flex-col w-full mr-4 md:mr-6">
                   <div className="flex justify-between items-end mb-2">
@@ -1076,8 +1196,8 @@
                 {currentData && currentData.options.map((word, index) => {
                   const isWrong = wrongWord === word;
                   const textSizeClass = selectedChar === 'nyam' 
-                    ? 'text-2xl md:text-4xl break-keep leading-tight'
-                    : 'text-2xl md:text-3xl break-keep';
+                    ? 'text-xl md:text-3xl lg:text-4xl break-keep leading-snug'
+                    : 'text-2xl md:text-4xl lg:text-5xl';
                   
                   return (
                     <button
@@ -1085,7 +1205,7 @@
                       onClick={() => handleFeed(word)}
                       disabled={monsterState !== 'idle' && monsterState !== 'sad'}
                       className={`
-                        relative p-4 md:p-8 rounded-2xl md:rounded-3xl font-bold shadow-md transition-all duration-300 flex items-center justify-center min-h-[80px] md:min-h-[100px]
+                        relative p-4 md:p-6 rounded-2xl md:rounded-3xl font-bold shadow-md transition-all duration-300 flex items-center justify-center min-h-[70px] md:min-h-[100px]
                         bg-white text-gray-700 border-b-4 md:border-b-8 border-gray-200
                         hover:scale-105 active:border-b-0 active:translate-y-2
                         ${textSizeClass}
