@@ -7,7 +7,12 @@
     
     <!-- 1. Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    
+    <script>
+        // 터치 기기에서 탭한 버튼에 hover 음영이 그대로 남는 문제 방지
+        // (마우스가 있는 기기에서만 hover: 스타일을 적용한다)
+        tailwind.config = { future: { hoverOnlyWhenSupported: true } };
+    </script>
+
     <!-- 2. React & ReactDOM -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -69,6 +74,10 @@
             100% { transform: scale(0); opacity: 0; }
         }
         .animate-pop { animation: pop 0.3s ease-out forwards; }
+
+        /* 클리어 화면의 반짝이에 쓰이는데 정의가 없어서 돌지 않았다 */
+        @keyframes spin-slow { to { transform: rotate(360deg); } }
+        .animate-spin-slow { animation: spin-slow 6s linear infinite; }
     </style>
 </head>
 <body class="bg-slate-100 selection:bg-green-200 h-[100dvh] w-screen overflow-hidden flex items-center justify-center">
@@ -78,6 +87,58 @@
         const { useState, useEffect, useCallback, useRef } = React;
 
         const QUESTIONS_PER_LEVEL = 10;
+        // 레벨당 실제로 준비하는 문제 수. 틀리면 경험치가 깎여 더 많은 문제를 풀게 되므로
+        // 클리어에 필요한 수보다 넉넉히 뽑아둔다 (다 쓰면 처음으로 돌아가며 순환).
+        const POOL_SIZE = QUESTIONS_PER_LEVEL * 2;
+        const DEFAULT_JEOP_SHAPE = 'rounded-[30%_70%_70%_30%_/_30%_30%_70%_70%]';
+
+        // 쩝쩝이 변신용. clip-path는 반드시 % 단위여야 몬스터 크기에 맞춰 늘어난다.
+        // (예전 하트는 24px짜리 SVG path()를 그대로 써서 손톱만 하게 잘려 나왔다)
+        const JEOP_CLIP = {
+            triangle: 'polygon(50% 0%, 0% 100%, 100% 100%)',
+            diamond:  'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
+            star:     'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)',
+            heart:    'polygon(50% 100%, 10% 60%, 0% 32%, 12% 8%, 32% 4%, 50% 20%, 68% 4%, 88% 8%, 100% 32%, 90% 60%)'
+        };
+
+        // 1단계 정답 이모지 -> 쩝쩝이가 변신할 모양과 몸 색.
+        // 흰색 계열은 눈·입이 흰색이라 아예 안 보여서 회색 톤으로 낮춰 잡았다.
+        const JEOP_SHAPES = {
+            '🔺': { shape: 'triangle', bg: 'bg-red-500'    },
+            '🔷': { shape: 'diamond',  bg: 'bg-blue-400'   },
+            '🔶': { shape: 'diamond',  bg: 'bg-orange-400' },
+            '⭐': { shape: 'star',     bg: 'bg-yellow-300' },
+            '💜': { shape: 'heart',    bg: 'bg-purple-500' },
+            '🩷': { shape: 'heart',    bg: 'bg-pink-400'   },
+            '🟥': { shape: 'square',   bg: 'bg-red-500'    },
+            '🟦': { shape: 'square',   bg: 'bg-blue-500'   },
+            '🟩': { shape: 'square',   bg: 'bg-green-500'  },
+            '🟨': { shape: 'square',   bg: 'bg-yellow-400' },
+            '🟧': { shape: 'square',   bg: 'bg-orange-500' },
+            '⬛': { shape: 'square',   bg: 'bg-gray-800'   },
+            '⬜': { shape: 'square',   bg: 'bg-gray-300'   },
+            '🎁': { shape: 'square',   bg: 'bg-pink-400'   },
+            '🟡': { shape: 'circle',   bg: 'bg-yellow-400' },
+            '🔴': { shape: 'circle',   bg: 'bg-red-500'    },
+            '🔵': { shape: 'circle',   bg: 'bg-blue-500'   },
+            '🟢': { shape: 'circle',   bg: 'bg-green-500'  },
+            '🟣': { shape: 'circle',   bg: 'bg-purple-500' },
+            '🟠': { shape: 'circle',   bg: 'bg-orange-500' },
+            '🟤': { shape: 'circle',   bg: 'bg-amber-700'  },
+            '⚫': { shape: 'circle',   bg: 'bg-gray-800'   },
+            '⚪': { shape: 'circle',   bg: 'bg-gray-300'   },
+            '⚽': { shape: 'circle',   bg: 'bg-gray-300'   },
+            '🍉': { shape: 'circle',   bg: 'bg-red-400'    },
+            '🍎': { shape: 'circle',   bg: 'bg-red-500'    },
+            '🍌': { shape: 'circle',   bg: 'bg-yellow-300' },
+            '🎈': { shape: 'circle',   bg: 'bg-red-400'    }
+        };
+
+        // 변신 상태(null이면 기본 몰랑 블롭)를 실제 클래스와 clip-path로 바꾼다.
+        const jeopShapeClass = (s) =>
+            !s ? DEFAULT_JEOP_SHAPE : (s.shape === 'circle' ? 'rounded-full' : 'rounded-none');
+        const jeopClipStyle = (s) =>
+            (s && JEOP_CLIP[s.shape]) ? { clipPath: JEOP_CLIP[s.shape] } : {};
 
         // --- 아이콘 (SVG) ---
         const IconBase = (props) => (
@@ -91,7 +152,7 @@
         const Sparkles = (props) => <IconBase {...props}><path d="m12 3-1.912 5.813a2 2 0 0 1-1.275 1.275L3 12l5.813 1.912a2 2 0 0 1 1.275 1.275L12 21l1.912-5.813a2 2 0 0 1 1.275-1.275L12 3Z"/><path d="M5 3v4"/><path d="M9 3v4"/><path d="M2 7h4"/><path d="M2 11h4"/></IconBase>;
         const Crown = (props) => <IconBase {...props}><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14" /></IconBase>;
         const Volume2 = (props) => <IconBase {...props}><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" /><path d="M15.54 8.46a5 5 0 0 1 0 7.07" /><path d="M19.07 4.93a10 10 0 0 1 0 14.14" /></IconBase>;
-        const Music = (props) => <IconBase {...props}><path d="M9 18V5l12-2v13" /></IconBase>;
+        const Music = (props) => <IconBase {...props}><path d="M9 18V5l12-2v13" /><circle cx="6" cy="18" r="3" /><circle cx="18" cy="16" r="3" /></IconBase>;
         const Music2 = (props) => <IconBase {...props}><circle cx="8" cy="18" r="4"/><path d="M12 18V2l7 4"/></IconBase>;
         const Wrench = (props) => <IconBase {...props}><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></IconBase>;
         const Heart = (props) => <IconBase {...props} fill="currentColor" stroke="none"><path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" /></IconBase>;
@@ -278,15 +339,15 @@
                 { prompt: "'빨간색 세모'를 찾아줘!", answer: "🔺", options: ["🔺", "🟦", "🟡"] },
                 { prompt: "'파란색 네모'는 어디있을까?", answer: "🟦", options: ["🟦", "🔺", "⭐"] },
                 { prompt: "'노란색 동그라미'를 줘!", answer: "🟡", options: ["🟡", "🟩", "💜"] },
-                { prompt: "'초록색 별'이 반짝반짝!", answer: "⭐", options: ["⭐", "🔺", "🟠"] },
+                { prompt: "'노란색 별'이 반짝반짝!", answer: "⭐", options: ["⭐", "🔺", "🟠"] },
                 { prompt: "'보라색 하트'를 찾아라!", answer: "💜", options: ["💜", "🔷", "🟥"] },
                 { prompt: "뾰족뾰족 '세모'는?", answer: "🔺", options: ["🔺", "🟡", "🟥"] },
                 { prompt: "반듯반듯 '네모'는?", answer: "🟥", options: ["🟥", "🔺", "⭐"] },
                 { prompt: "동글동글 '동그라미'는?", answer: "🟡", options: ["🟡", "🟥", "🔷"] },
                 { prompt: "반짝반짝 '별' 모양은?", answer: "⭐", options: ["⭐", "💜", "🔺"] },
                 { prompt: "사랑해 '하트' 모양은?", answer: "💜", options: ["💜", "⭐", "🟡"] },
-                { prompt: "'주황색' 블록을 찾아줘", answer: "🟠", options: ["🟠", "🟦", "🟩"] },
-                { prompt: "'분홍색' 예쁜 블록", answer: "🩷", options: ["🩷", "🟡", "⬛"] },
+                { prompt: "'주황색 동그라미'를 찾아줘", answer: "🟠", options: ["🟠", "🟦", "🟩"] },
+                { prompt: "'분홍색 하트'는 어디있을까?", answer: "🩷", options: ["🩷", "🟡", "⬛"] },
                 // 추가 20문제
                 { prompt: "'검정색 네모'는 어디?", answer: "⬛", options: ["⬛", "⬜", "🟥"] },
                 { prompt: "'하얀색 네모'를 찾아라", answer: "⬜", options: ["⬜", "⬛", "🟦"] },
@@ -304,8 +365,8 @@
                 { prompt: "세모난 '수박' 조각", answer: "🍉", options: ["🍉", "🍊", "🍋"] },
                 { prompt: "동그란 '사과'", answer: "🍎", options: ["🍎", "🍌", "🍇"] },
                 { prompt: "길쭉한 '바나나'", answer: "🍌", options: ["🍌", "🍎", "🍊"] },
-                { prompt: "별 모양 '불가사리'", answer: "⭐", options: ["⭐", "🐟", "🐙"] },
-                { prompt: "하트 모양 '풍선'", answer: "🎈", options: ["🎈", "🎀", "🎁"] },
+                { prompt: "바다 친구들 중 '별' 모양은?", answer: "⭐", options: ["⭐", "🐟", "🐙"] },
+                { prompt: "동그란 '풍선'을 찾아줘", answer: "🎈", options: ["🎈", "🎀", "🎁"] },
                 { prompt: "네모난 '선물상자'", answer: "🎁", options: ["🎁", "🎈", "🎉"] },
                 { prompt: "동그란 '축구공'", answer: "⚽", options: ["⚽", "🏈", "🏸"] }
             ],
@@ -377,6 +438,11 @@
             ]
         };
 
+        // 숫자를 우리말로 읽었을 때 받침이 있는지에 따라 '은/는'을 고른다.
+        // (음성으로 읽어주기 때문에 "5 빼기 1는?", "9 더하기 2은?" 처럼 나오면 안 된다)
+        // 끝자리 2·4·5·9 = 이·사·오·구 는 받침이 없고, 나머지는 받침이 있다.
+        const eunNeun = (n) => ([2, 4, 5, 9].includes(n % 10) ? '는' : '은');
+
         // 1-B. 뇸뇸이 (수학) 문제 생성기 - 로직 수정
         const generateMathQuestion = (level) => {
             let a, b, answer, prompt, op;
@@ -386,7 +452,7 @@
                 a = Math.floor(Math.random() * 9) + 1; 
                 b = Math.floor(Math.random() * a) + 1; 
                 answer = a - b;
-                prompt = `${a} 빼기 ${b}는?`;
+                prompt = `${a} 빼기 ${b}${eunNeun(b)}?`;
                 op = "-";
             } else if (level === 2) {
                 // 2) 레벨 2: 한자리 + 한자리 = 두자리 (합이 10 이상)
@@ -396,7 +462,7 @@
                 } while (a + b < 10);
                 
                 answer = a + b;
-                prompt = `${a} 더하기 ${b}은?`;
+                prompt = `${a} 더하기 ${b}${eunNeun(b)}?`;
                 op = "+";
             } else {
                 // 3) 레벨 3: 두자리 - 한자리 = 한자리 (결과가 10 미만)
@@ -406,7 +472,7 @@
                 } while (a - b >= 10 || a - b < 0);
 
                 answer = a - b;
-                prompt = `${a} 빼기 ${b}는?`;
+                prompt = `${a} 빼기 ${b}${eunNeun(b)}?`;
                 op = "-";
             }
 
@@ -424,7 +490,7 @@
                 options.add(Math.floor(Math.random() * 20));
             }
             
-            const optionsArray = Array.from(options).sort(() => Math.random() - 0.5).map(String);
+            const optionsArray = shuffleArray(Array.from(options)).map(String);
 
             return {
                 prompt: prompt,
@@ -462,18 +528,50 @@
           const [gameState, setGameState] = useState('characterSelect'); 
           const [selectedChar, setSelectedChar] = useState('nyam'); 
           
-          const [gameQuestions, setGameQuestions] = useState([]);
+          // 레벨별로 문제 묶음을 따로 보관한다. { 1: [...], 2: [...], 3: [...] }
+          // (예전처럼 3개 레벨을 하나의 배열로 이어붙이면, 틀려서 경험치가 깎일 때마다
+          //  인덱스만 계속 앞으로 나가서 결국 배열 끝을 넘어가고 게임이 멈췄다.)
+          const [questionPools, setQuestionPools] = useState({ 1: [], 2: [], 3: [] });
           const [currentIdx, setCurrentIdx] = useState(0);
           const [level, setLevel] = useState(1);
-          const [exp, setExp] = useState(0); 
-          const maxExpPerLevel = QUESTIONS_PER_LEVEL; 
+          const [exp, setExp] = useState(0);
+          const maxExpPerLevel = QUESTIONS_PER_LEVEL;
 
-          const [monsterState, setMonsterState] = useState('idle'); 
+          const [monsterState, setMonsterState] = useState('idle');
           const [swallowedWord, setSwallowedWord] = useState('');
           const [wrongWord, setWrongWord] = useState(null);
-          
+
           // [추가] 쩝쩝이 변신용 모양 상태
-          const [jeopShapeStyle, setJeopShapeStyle] = useState('rounded-[30%_70%_70%_30%_/_30%_30%_70%_70%]'); 
+          // null = 기본 몰랑 블롭, 아니면 { shape, bg }
+          const [jeopShape, setJeopShape] = useState(null);
+
+          // alert() 대신 쓰는 화면 안 알림 (글 못 읽는 아이도 그림으로 알 수 있게)
+          const [notice, setNotice] = useState(null);
+
+          // 예약된 애니메이션 타이머들. 화면을 벗어나거나 다음 답을 고르면 모두 취소해야
+          // 뒤늦게 터진 타이머가 상태를 덮어쓰지 않는다.
+          const timersRef = useRef([]);
+          const digestTimerRef = useRef(null);
+
+          const later = (fn, ms) => {
+            const id = setTimeout(fn, ms);
+            timersRef.current.push(id);
+            return id;
+          };
+          const clearTimers = () => {
+            timersRef.current.forEach(clearTimeout);
+            timersRef.current = [];
+            if (digestTimerRef.current) {
+              clearInterval(digestTimerRef.current);
+              digestTimerRef.current = null;
+            }
+          };
+          useEffect(() => clearTimers, []);
+
+          const showNotice = (emoji, text, ms = 2400) => {
+            setNotice({ emoji, text });
+            later(() => setNotice(null), ms);
+          };
 
           const [isMusicPlaying, setIsMusicPlaying] = useState(false);
           const [showDebug, setShowDebug] = useState(false);
@@ -521,7 +619,7 @@
                       text: "text-orange-600",
                       lightBg: "bg-orange-50",
                       label: "쩝쩝이",
-                      shape: `w-32 h-32 transition-all duration-500 ${jeopShapeStyle}`, // [수정] 변신 스타일 적용
+                      shape: `w-32 h-32 transition-all duration-500 ${jeopShapeClass(jeopShape)}`, // [수정] 변신 스타일 적용
                       eye: "w-5 h-5 bg-white rounded-full",
                       levels: [
                           { size: 'w-32 h-32', desc: '모양과 색깔' },
@@ -532,6 +630,7 @@
               }
           };
           const currentStyle = getStyles();
+          const currentPool = questionPools[level] || [];
 
           const addLog = (msg) => {
              const time = new Date().toLocaleTimeString();
@@ -588,43 +687,76 @@
 
           // [추가] 타이머 로직
           useEffect(() => {
-              let timerId;
-              if (gameState === 'digesting') {
-                  setTimeLeft(30);
-                  timerId = setInterval(() => {
-                      setTimeLeft((prev) => {
-                          if (prev <= 1) {
-                              clearInterval(timerId);
-                              handleDigestFail();
-                              return 0;
-                          }
-                          return prev - 1;
-                      });
-                  }, 1000);
-              }
-              return () => clearInterval(timerId);
+              if (gameState !== 'digesting') return;
+              setTimeLeft(30);
+              const timerId = setInterval(() => {
+                  // 부수효과를 updater 안에서 실행하면 안 되므로 남은 시간만 줄이고,
+                  // 0이 되는 처리는 아래 별도 effect에서 한다.
+                  setTimeLeft((prev) => (prev <= 0 ? 0 : prev - 1));
+              }, 1000);
+              digestTimerRef.current = timerId;
+              return () => {
+                  clearInterval(timerId);
+                  if (digestTimerRef.current === timerId) digestTimerRef.current = null;
+              };
           }, [gameState]);
 
+          useEffect(() => {
+              if (gameState === 'digesting' && timeLeft === 0) handleDigestFail();
+          }, [gameState, timeLeft]);
+
           const handleDigestFail = () => {
-              alert("시간 초과! 배탈이 났어요 ㅠㅠ");
+              clearTimers();
+              setDigestBubbles([]);
+              setTimeLeft(30);
               setExp(0);
               setCollectedWords([]);
+              setMonsterState('idle');
+              setSwallowedWord('');
+              setWrongWord(null);
               setGameState('playing');
               // 레벨 초기화는 아님, 해당 레벨 경험치만 초기화
+              // alert()는 화면을 막아버리는 데다 글 못 읽는 아이에겐 의미가 없어서
+              // 그림이 있는 화면 안 알림으로 바꿨다.
+              showNotice('🤢', '배탈이 났어요!\n처음부터 다시 해볼까요?');
+              speakWord("아이고, 배탈이 났어요! 처음부터 다시 해볼까요?");
           };
 
-          const resetLevel = () => {
-              // 현재 레벨을 처음부터 다시 시작 (문제 재설정, 경험치 0)
-              const newQuestions = prepareGameData(selectedChar, level);
-              setGameQuestions(newQuestions);
+          // 한 판을 처음 상태로 되돌린다. 예약된 타이머까지 반드시 함께 취소해야
+          // 이전 판의 애니메이션 콜백이 새 판의 상태를 덮어쓰지 않는다.
+          const resetPlayState = () => {
+              clearTimers();
+              setNotice(null);
               setCurrentIdx(0);
               setExp(0);
               setMonsterState('idle');
               setSwallowedWord('');
               setWrongWord(null);
               setCollectedWords([]);
+              setDigestBubbles([]);
+              setTimeLeft(30);
+              setJeopShape(null);
+          };
+
+          const resetLevel = () => {
+              // 현재 레벨을 처음부터 다시 시작 (문제 재설정, 경험치 0)
+              setQuestionPools(prepareGameData(selectedChar));
+              resetPlayState();
               setGameState('playing'); // 혹시 다른 상태였으면 playing으로
               speakWord("다시 시작해볼까요?");
+          };
+
+          // 놀이 화면에서 빠져나갈 때 (홈/캐릭터 변경) 남은 타이머를 정리한다.
+          const leaveTo = (state) => {
+              clearTimers();
+              setNotice(null);
+              setMonsterState('idle');
+              setSwallowedWord('');
+              setWrongWord(null);
+              // 메뉴 화면에는 clip-path 인라인 스타일이 붙지 않으므로, 변신한 모양을
+              // 그대로 들고 나가면 쩝쩝이가 밋밋한 네모로 보인다. 기본 모양으로 되돌린다.
+              setJeopShape(null);
+              setGameState(state);
           };
 
           const toggleMusic = () => {
@@ -636,12 +768,9 @@
                   let defaultPath = 'public/music/bgm1.mp3';
                   if (selectedChar === 'nyom') defaultPath = 'public/music/bgm2.mp3';
                   if (selectedChar === 'jeop') defaultPath = 'public/music/bgm3.mp3';
+                  // 경로가 바뀌면 아래 useEffect([audioPath])가 알아서 재생한다.
+                  // 여기서 또 play()를 걸면 두 번 재생 요청이 겹쳐 한쪽이 실패한다.
                   setAudioPath(defaultPath);
-                  setTimeout(() => {
-                      if (audioRef.current) {
-                          audioRef.current.play().catch(e => addLog(`재생 실패: ${e.name}`));
-                      }
-                  }, 100);
               } else {
                   audioRef.current.play().catch(e => {
                       addLog(`재생 실패: ${e.name}`);
@@ -652,33 +781,16 @@
 
           const changePath = (newPath) => setAudioPath(newPath);
 
-          const prepareGameData = (char, startLevel) => {
-            let questions = [];
+          // 레벨별 문제 묶음을 { 1: [...], 2: [...], 3: [...] } 형태로 만든다.
+          // 시작 레벨과 무관하게 세 레벨을 모두 준비해두고, 화면에는 현재 레벨 것만 쓴다.
+          const prepareGameData = (char) => {
+            const pick = (list) => shuffleArray(list).slice(0, POOL_SIZE).map(shuffleOptions);
             if (char === 'nyam') {
-                const l1 = shuffleArray(WORD_DATA.level1).slice(0, QUESTIONS_PER_LEVEL);
-                const l2 = shuffleArray(WORD_DATA.level2).slice(0, QUESTIONS_PER_LEVEL);
-                const l3 = shuffleArray(WORD_DATA.level3).slice(0, QUESTIONS_PER_LEVEL);
-                if (startLevel === 1) questions = [...l1, ...l2, ...l3];
-                else if (startLevel === 2) questions = [...l2, ...l3];
-                else questions = [...l3];
-                return questions.map(shuffleOptions);
+                return { 1: pick(WORD_DATA.level1), 2: pick(WORD_DATA.level2), 3: pick(WORD_DATA.level3) };
             } else if (char === 'jeop') {
-                const l1 = shuffleArray(JEOP_DATA.level1).slice(0, QUESTIONS_PER_LEVEL);
-                const l2 = shuffleArray(JEOP_DATA.level2).slice(0, QUESTIONS_PER_LEVEL);
-                const l3 = shuffleArray(JEOP_DATA.level3).slice(0, QUESTIONS_PER_LEVEL);
-                if (startLevel === 1) questions = [...l1, ...l2, ...l3];
-                else if (startLevel === 2) questions = [...l2, ...l3];
-                else questions = [...l3];
-                return questions.map(shuffleOptions);
-            } else {
-                const l1 = generateMathPool(1, QUESTIONS_PER_LEVEL);
-                const l2 = generateMathPool(2, QUESTIONS_PER_LEVEL);
-                const l3 = generateMathPool(3, QUESTIONS_PER_LEVEL);
-                if (startLevel === 1) questions = [...l1, ...l2, ...l3];
-                else if (startLevel === 2) questions = [...l2, ...l3];
-                else questions = [...l3];
-                return questions;
+                return { 1: pick(JEOP_DATA.level1), 2: pick(JEOP_DATA.level2), 3: pick(JEOP_DATA.level3) };
             }
+            return { 1: generateMathPool(1, POOL_SIZE), 2: generateMathPool(2, POOL_SIZE), 3: generateMathPool(3, POOL_SIZE) };
           };
 
           const speakWord = useCallback((text) => {
@@ -750,14 +862,15 @@
           }, [selectedChar]);
 
           const selectCharacter = (char) => {
+              clearTimers();
               setSelectedChar(char);
               setGameState('menu');
               let bgmFile = 'bgm1.mp3';
               if (char === 'nyom') bgmFile = 'bgm2.mp3';
               if (char === 'jeop') bgmFile = 'bgm3.mp3';
-              
+
               // [추가] 쩝쩝이 초기 모양 설정
-              if (char === 'jeop') setJeopShapeStyle('rounded-[30%_70%_70%_30%_/_30%_30%_70%_70%]');
+              setJeopShape(null);
 
               const newPath = `public/music/${bgmFile}`;
               setAudioPath(newPath);
@@ -773,81 +886,100 @@
           };
 
           const startGame = (startLevel) => {
-            const questions = prepareGameData(selectedChar, startLevel);
-            setGameQuestions(questions);
-            setCurrentIdx(0);
+            setQuestionPools(prepareGameData(selectedChar));
             setLevel(startLevel);
-            setExp(0);
-            setMonsterState('idle');
-            setCollectedWords([]); 
+            resetPlayState();
             setGameState('playing');
           };
 
           const handleFeed = (selectedOption) => {
             if (monsterState !== 'idle' && monsterState !== 'sad') return;
-            
+
+            const currentData = currentPool[currentIdx];
+            if (!currentData) return;
+
+            // 직전 오답의 '800ms 뒤 idle 복귀' 같은 예약 타이머를 먼저 없앤다.
+            // 안 그러면 그 타이머가 먹는 도중에 끼어들어 버튼을 다시 열어버리고,
+            // 한 문제에 두 번 답이 들어가 경험치와 문제 번호가 어긋난다.
+            clearTimers();
+
             speakWord(selectedOption);
-            
-            const currentData = gameQuestions[currentIdx];
-            
+
             if (selectedOption === currentData.answer) {
               setMonsterState('eating');
               setSwallowedWord(selectedOption);
               playSound('eat');
               
-              setCollectedWords(prev => [...prev, selectedOption]);
+              // 아래 예약 콜백에서 쓰려면 지금 만든 배열을 그대로 넘겨야 한다.
+              // (setState 후 옛 클로저의 collectedWords를 읽으면 마지막 단어가 빠진다)
+              const newWords = [...collectedWords, selectedOption];
+              setCollectedWords(newWords);
               
               // [추가] 쩝쩝이 레벨 1 변신 로직
+              // 표에 없는 정답(문자열 보기 등)은 기본 몰랑 블롭으로 되돌린다.
               if (selectedChar === 'jeop' && level === 1) {
-                  if (selectedOption.includes('🔺') || selectedOption.includes('세모')) setJeopShapeStyle('clip-path-triangle bg-red-400 rounded-none');
-                  else if (selectedOption.includes('🟥') || selectedOption.includes('네모')) setJeopShapeStyle('rounded-none bg-blue-400');
-                  else if (selectedOption.includes('🟡') || selectedOption.includes('동그라미')) setJeopShapeStyle('rounded-full bg-yellow-400');
-                  else if (selectedOption.includes('⭐') || selectedOption.includes('별')) setJeopShapeStyle('clip-path-star bg-yellow-300 rounded-none');
-                  else if (selectedOption.includes('💜') || selectedOption.includes('하트')) setJeopShapeStyle('clip-path-heart bg-purple-400 rounded-none');
-                  else setJeopShapeStyle('animate-morph'); // 기본
+                  setJeopShape(JEOP_SHAPES[selectedOption] || null);
               }
 
-              setTimeout(() => {
+              later(() => {
                 setMonsterState('happy');
                 playSound('happy');
                 setSwallowedWord('');
-                
+
                 const newExp = exp + 1;
                 setExp(newExp);
 
-                setTimeout(() => {
+                later(() => {
                   if (newExp >= maxExpPerLevel) {
                     // 모든 캐릭터 소화시키기 게임으로 통일
-                    startDigestion();
+                    startDigestion(newWords);
                   } else {
                     nextQuestion();
                   }
                 }, 1500);
-              }, 600); 
+              }, 600);
 
             } else {
               setMonsterState('sad');
               setWrongWord(selectedOption);
               setExp(prev => (prev > 0 ? prev - 1 : 0));
-              setTimeout(() => {
+              later(() => {
                 setMonsterState('idle');
                 setWrongWord(null);
               }, 800);
             }
           };
 
-          const startDigestion = () => {
-              const newBubbles = collectedWords.map((word, i) => ({
-                  id: i,
-                  word: word,
-                  x: Math.random() * 70 + 5, 
-                  y: Math.random() * 60 + 10, 
-                  size: Math.random() * 40 + 80, 
-                  speed: Math.random() * 2 + 3 + 's', 
-                  delay: Math.random() * 2 + 's'
-              }));
-              
+          const startDigestion = (words = collectedWords) => {
+              // 방울이 하나도 없으면 터뜨릴 게 없어 30초를 그냥 날리게 되므로 바로 넘어간다.
+              if (!words.length) { finishLevelUp(); return; }
+
+              // 한 레벨은 QUESTIONS_PER_LEVEL문제이므로 방울도 그만큼만 띄운다.
+              // (틀릴수록 먹은 단어가 계속 쌓여서 20개 넘는 방울이 30초 안에 못 터뜨릴 만큼
+              //  겹쳐 나왔고, 그러면 무조건 배탈 -> 다시 배탈이 반복됐다)
+              const picked = words.slice(-QUESTIONS_PER_LEVEL);
+
+              // 3열 격자에 하나씩 배치하고 칸 안에서만 조금씩 흔든다. 완전 무작위로 놓으면
+              // 방울끼리 포개져서 아래 깔린 방울은 아예 누를 수 없었다.
+              const cells = shuffleArray(
+                  Array.from({ length: 12 }, (_, i) => ({ col: i % 3, row: Math.floor(i / 3) }))
+              );
+
+              const newBubbles = picked.map((word, i) => {
+                  const cell = cells[i % cells.length];
+                  return {
+                      id: i,
+                      word: word,
+                      x: cell.col * 28 + Math.random() * 4,
+                      y: cell.row * 22 + 4 + Math.random() * 3,
+                      size: Math.random() * 20 + 64,
+                      speed: Math.random() * 2 + 3 + 's',
+                      delay: Math.random() * 2 + 's'
+                  };
+              });
+
               setDigestBubbles(newBubbles);
+              setTimeLeft(30); // 이전 판에서 0으로 끝났을 수 있으므로 먼저 되돌려 둔다
               setGameState('digesting');
               speakWord("배가 너무 불러요! 방울을 터트려서 소화시켜주세요!");
           };
@@ -857,7 +989,13 @@
               const remaining = digestBubbles.filter(b => b.id !== id);
               setDigestBubbles(remaining);
               if (remaining.length === 0) {
-                  setTimeout(finishLevelUp, 500);
+                  // 마지막 방울을 터뜨린 순간 제한시간 타이머를 즉시 멈춘다.
+                  // (0.5초 뒤 레벨업이 뜨기 전에 시간이 다 되면 배탈 처리가 겹쳐 터진다)
+                  if (digestTimerRef.current) {
+                      clearInterval(digestTimerRef.current);
+                      digestTimerRef.current = null;
+                  }
+                  later(finishLevelUp, 500);
               }
           };
 
@@ -869,37 +1007,52 @@
             }
             
             setMonsterState('levelup');
-            setGameState('playing'); 
+            setGameState('playing');
             playSound('levelup');
             speakWord(`${currentStyle.label}가 쑥쑥 자랐어요!`);
-            
-            setTimeout(() => {
+
+            later(() => {
               setLevel(prev => prev + 1);
               setExp(0);
-              setCollectedWords([]); 
+              setCollectedWords([]);
+              setDigestBubbles([]);
+              setTimeLeft(30);
               setMonsterState('idle');
-              nextQuestion(true);
+              setWrongWord(null);
+              setSwallowedWord('');
+              // 새 레벨은 자기 문제 묶음의 첫 문제부터 시작한다.
+              setCurrentIdx(0);
+              // 레벨 1에서 변신한 모양은 해당 레벨 전용이므로 기본 모양으로 되돌린다.
+              setJeopShape(null);
             }, 2500);
           };
 
-          const nextQuestion = (isAfterLevelUp = false) => {
-            const nextIdx = currentIdx + 1;
-            if (nextIdx < gameQuestions.length) {
-              setCurrentIdx(nextIdx);
-              setMonsterState('idle');
-            }
+          const nextQuestion = () => {
+            // 문제 묶음 끝에 닿으면 처음으로 돌아간다.
+            // 예전에는 여기서 아무것도 하지 않아 monsterState가 'happy'에 멈춘 채
+            // 보기 버튼이 영영 비활성으로 남았다 (= 게임이 멈추는 증상).
+            const poolSize = currentPool.length;
+            if (!poolSize) return;
+            setCurrentIdx((prev) => (prev + 1) % poolSize);
+            setMonsterState('idle');
           };
 
-          const renderOverlayControls = () => (
+          // 음악/디버그 버튼. 놀이 화면에서는 헤더 안에 같이 넣고, 나머지 화면에서는
+          // 오른쪽 위에 띄운다. (놀이 화면에서 띄우면 헤더의 홈·다시하기 버튼을 정확히
+          // 덮어버려서 휴대폰에서는 홈 버튼을 아예 누를 수 없었다)
+          const renderAudioButtons = (size = 24) => (
              <>
-                <div className="absolute top-4 right-4 md:top-6 md:right-6 flex gap-2 z-50">
-                    <button onClick={toggleMusic} className={`p-3 rounded-full shadow-md transition-all ${isMusicPlaying ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>
-                      {isMusicPlaying ? <Music /> : <Music2 />}
-                    </button>
-                    <button onClick={() => setShowDebug(!showDebug)} className={`p-3 rounded-full shadow-md transition-all ${showDebug ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>
-                      <Wrench />
-                    </button>
-                </div>
+                <button onClick={toggleMusic} className={`p-2 md:p-3 rounded-full shadow-md transition-all flex-shrink-0 ${isMusicPlaying ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>
+                  {isMusicPlaying ? <Music size={size} /> : <Music2 size={size} />}
+                </button>
+                <button onClick={() => setShowDebug(!showDebug)} className={`p-2 md:p-3 rounded-full shadow-md transition-all flex-shrink-0 ${showDebug ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}`}>
+                  <Wrench size={size} />
+                </button>
+             </>
+          );
+
+          const renderDebugPanel = () => (
+             <>
                 {showDebug && (
                     <div className="absolute bottom-4 right-4 bg-black/80 text-white p-4 rounded-xl text-xs z-50 w-64 shadow-2xl backdrop-blur-sm">
                         <div className="mb-2 text-yellow-400 font-bold">🔧 디버그</div>
@@ -915,6 +1068,15 @@
                         </div>
                     </div>
                 )}
+             </>
+          );
+
+          const renderOverlayControls = () => (
+             <>
+                <div className="absolute top-4 right-4 md:top-6 md:right-6 flex gap-2 z-50">
+                    {renderAudioButtons()}
+                </div>
+                {renderDebugPanel()}
              </>
           );
 
@@ -961,7 +1123,7 @@
               <div className={`flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 relative ${currentStyle.lightBg}`}>
                 {renderOverlayControls()}
                 <div className="absolute top-4 left-4 md:top-6 md:left-6">
-                    <button onClick={() => setGameState('characterSelect')} className="px-3 py-1.5 md:px-4 md:py-2 bg-white rounded-full text-gray-500 font-bold hover:bg-gray-100 shadow-sm flex items-center gap-2 text-sm md:text-base">
+                    <button onClick={() => leaveTo('characterSelect')} className="px-3 py-1.5 md:px-4 md:py-2 bg-white rounded-full text-gray-500 font-bold hover:bg-gray-100 shadow-sm flex items-center gap-2 text-sm md:text-base">
                         <Home size={18}/> <span className="hidden md:inline">캐릭터 바꾸기</span>
                     </button>
                 </div>
@@ -1076,7 +1238,8 @@
             return (
               <div className="flex flex-col items-center justify-center h-full w-full max-w-3xl mx-auto p-6 rounded-3xl shadow-2xl my-4 text-center bg-purple-50">
                 {renderOverlayControls()}
-                <Sparkles className="text-purple-400 w-16 h-16 mb-6 animate-spin-slow" />
+                {/* 왕관이 몬스터 위로 48px 튀어나오므로 여백을 넉넉히 둬야 겹치지 않는다 */}
+                <Sparkles className="text-purple-400 w-16 h-16 mb-16 animate-spin-slow" />
                 <div className={`${currentStyle.levels[2].size} ${currentStyle.bg} ${selectedChar === 'nyom' ? 'rounded-[3rem]' : selectedChar === 'jeop' ? 'rounded-3xl' : 'rounded-full'} flex flex-col items-center justify-center mb-8 shadow-2xl animate-bounce relative`}>
                   <div className="absolute -top-12 animate-pulse">
                     <Crown className="text-yellow-400 fill-yellow-400 drop-shadow-lg w-16 h-16" />
@@ -1090,10 +1253,10 @@
                 <h2 className="text-3xl md:text-5xl font-extrabold text-purple-600 mb-6">{currentStyle.label}가 왕이 되었어요!</h2>
                 <p className="text-xl text-gray-500 mb-8 font-bold">참 잘했어요! 멋진 박사님!</p>
                 <div className="flex gap-4">
-                    <button onClick={() => setGameState('menu')} className="flex items-center space-x-2 px-6 py-3 bg-gray-800 text-white rounded-full font-bold text-lg hover:bg-gray-700 transition-colors shadow-lg active:scale-95">
+                    <button onClick={() => leaveTo('menu')} className="flex items-center space-x-2 px-6 py-3 bg-gray-800 text-white rounded-full font-bold text-lg hover:bg-gray-700 transition-colors shadow-lg active:scale-95">
                       <RotateCcw size={20} /> <span>다시 키우기</span>
                     </button>
-                    <button onClick={() => setGameState('characterSelect')} className="flex items-center space-x-2 px-6 py-3 bg-white text-gray-800 border-2 border-gray-200 rounded-full font-bold text-lg hover:bg-gray-50 transition-colors shadow-lg active:scale-95">
+                    <button onClick={() => leaveTo('characterSelect')} className="flex items-center space-x-2 px-6 py-3 bg-white text-gray-800 border-2 border-gray-200 rounded-full font-bold text-lg hover:bg-gray-50 transition-colors shadow-lg active:scale-95">
                       <Home size={20} /> <span>다른 친구</span>
                     </button>
                 </div>
@@ -1101,35 +1264,53 @@
             );
           }
 
-          const currentData = gameQuestions[currentIdx];
+          const currentData = currentPool[currentIdx];
           const displayPrompt = currentData ? (currentData.display || currentData.prompt) : "";
+
+          // 몸 색은 딱 하나만 붙인다. 예전처럼 bg 클래스를 여러 개 겹쳐 두면
+          // 어떤 색이 이기는지가 Tailwind의 CSS 출력 순서에 달려 있어 들쭉날쭉했다.
+          const monsterBg =
+              monsterState === 'sad'     ? 'bg-gray-400'
+            : monsterState === 'levelup' ? 'bg-yellow-300'
+            : (selectedChar === 'jeop' && jeopShape) ? jeopShape.bg
+            : currentStyle.bg;
           const progressPercent = (exp / maxExpPerLevel) * 100;
 
           // 5. 게임 플레이 화면 (반응형 텍스트 크기 적용)
           return (
             <div className={`flex flex-col h-full w-full max-w-4xl mx-auto p-4 md:p-6 rounded-3xl shadow-2xl my-auto relative overflow-hidden justify-between ${currentStyle.lightBg}`}>
               <div className="flex justify-between items-center bg-white p-4 md:p-6 rounded-3xl shadow-md z-10 w-full mb-4">
-                <div className="flex flex-col w-full mr-4 md:mr-6">
-                  <div className="flex justify-between items-end mb-2">
-                    <span className="text-lg md:text-xl font-bold text-gray-600">{currentStyle.label} (Lv.{level})</span>
-                    <span className="text-md md:text-lg font-bold text-gray-500">{exp} / {maxExpPerLevel}</span>
+                <div className="flex flex-col w-full min-w-0 mr-2 md:mr-6">
+                  <div className="flex justify-between items-end gap-2 mb-2">
+                    <span className="text-sm md:text-xl font-bold text-gray-600 whitespace-nowrap truncate">{currentStyle.label} (Lv.{level})</span>
+                    <span className="text-sm md:text-lg font-bold text-gray-500 whitespace-nowrap flex-shrink-0">{exp} / {maxExpPerLevel}</span>
                   </div>
                   <div className="w-full h-4 bg-gray-200 rounded-full overflow-hidden">
                     <div className={`h-full ${selectedChar === 'nyam' ? 'bg-green-400' : selectedChar === 'nyom' ? 'bg-cyan-400' : 'bg-orange-400'} transition-all duration-500 ease-out`} style={{ width: `${progressPercent}%` }} />
                   </div>
                 </div>
-                <div className="flex gap-2">
-                    <button onClick={resetLevel} className="p-3 bg-gray-100 rounded-full hover:bg-gray-200 flex-shrink-0" title="이 단계 다시 시작">
-                        <Refresh className="text-gray-600" size={24} />
+                <div className="flex gap-1 md:gap-2 items-center">
+                    {renderAudioButtons(20)}
+                    <button onClick={resetLevel} className="p-2 md:p-3 bg-gray-100 rounded-full hover:bg-gray-200 flex-shrink-0" title="이 단계 다시 시작">
+                        <Refresh className="text-gray-600" size={20} />
                     </button>
-                    <button onClick={() => setGameState('menu')} className="p-3 bg-gray-100 rounded-full hover:bg-gray-200 flex-shrink-0">
-                      <Home className="text-gray-600" size={24} />
+                    <button onClick={() => leaveTo('menu')} className="p-2 md:p-3 bg-gray-100 rounded-full hover:bg-gray-200 flex-shrink-0" title="처음 화면으로">
+                      <Home className="text-gray-600" size={20} />
                     </button>
                 </div>
               </div>
-              
-              {renderOverlayControls()}
-              
+
+              {renderDebugPanel()}
+
+              {notice && (
+                <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none px-6">
+                  <div className="bg-white/95 backdrop-blur-sm border-4 border-red-200 rounded-3xl px-8 py-6 shadow-2xl text-center animate-bounce">
+                    <div className="text-6xl md:text-7xl mb-3">{notice.emoji}</div>
+                    <p className="text-xl md:text-3xl font-extrabold text-red-500 whitespace-pre-line break-keep">{notice.text}</p>
+                  </div>
+                </div>
+              )}
+
               {!currentData ? <div className="flex-1 flex items-center justify-center text-xl font-bold text-gray-500">문제를 불러오는 중...</div> :
               <>
                 <div className="flex-1 flex flex-col items-center justify-center w-full relative min-h-0">
@@ -1154,17 +1335,13 @@
 
                     <div className={`
                     relative transition-all duration-700 ease-in-out flex flex-col items-center justify-center shadow-xl transform scale-100 md:scale-125
-                    ${currentStyle.levels[level-1].size} ${currentStyle.bg} 
-                    ${selectedChar === 'nyom' ? 'rounded-[3rem] animate-jelly' : selectedChar === 'jeop' ? jeopShapeStyle : 'rounded-full'}
-                    ${monsterState === 'sad' ? 'animate-shake bg-gray-400' : ''}
+                    ${currentStyle.levels[level-1].size} ${monsterBg}
+                    ${selectedChar === 'nyom' ? 'rounded-[3rem] animate-jelly' : selectedChar === 'jeop' ? jeopShapeClass(jeopShape) : 'rounded-full'}
+                    ${monsterState === 'sad' ? 'animate-shake' : ''}
                     ${monsterState === 'happy' ? 'animate-bounce' : ''}
-                    ${monsterState === 'levelup' ? 'animate-levelup bg-yellow-300' : ''}
+                    ${monsterState === 'levelup' ? 'animate-levelup' : ''}
                     `}
-                    style={selectedChar === 'jeop' && jeopShapeStyle.includes('clip-path') ? { 
-                        clipPath: jeopShapeStyle.includes('triangle') ? 'polygon(50% 0%, 0% 100%, 100% 100%)' :
-                                jeopShapeStyle.includes('star') ? 'polygon(50% 0%, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%)' :
-                                jeopShapeStyle.includes('heart') ? 'path("M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z")' : 'none'
-                    } : {}}
+                    style={selectedChar === 'jeop' ? jeopClipStyle(jeopShape) : {}}
                     >
                     {level === 3 && monsterState === 'happy' && (
                         <div className="absolute -top-10 animate-bounce transition-opacity duration-500">
