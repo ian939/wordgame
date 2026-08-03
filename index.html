@@ -131,7 +131,19 @@
             '🍉': { shape: 'circle',   bg: 'bg-red-400'    },
             '🍎': { shape: 'circle',   bg: 'bg-red-500'    },
             '🍌': { shape: 'circle',   bg: 'bg-yellow-300' },
-            '🎈': { shape: 'circle',   bg: 'bg-red-400'    }
+            '🎈': { shape: 'circle',   bg: 'bg-red-400'    },
+            '🟪': { shape: 'square',   bg: 'bg-purple-500' },
+            '🟫': { shape: 'square',   bg: 'bg-amber-700'  },
+            '🍫': { shape: 'square',   bg: 'bg-amber-800'  },
+            '❤️': { shape: 'heart',    bg: 'bg-red-500'    },
+            '💛': { shape: 'heart',    bg: 'bg-yellow-400' },
+            '💙': { shape: 'heart',    bg: 'bg-blue-500'   },
+            '💚': { shape: 'heart',    bg: 'bg-green-500'  },
+            '🧡': { shape: 'heart',    bg: 'bg-orange-500' },
+            '🎀': { shape: 'heart',    bg: 'bg-pink-300'   },
+            '🍕': { shape: 'triangle', bg: 'bg-orange-400' },
+            '🐙': { shape: 'circle',   bg: 'bg-purple-500' },
+            '🍩': { shape: 'circle',   bg: 'bg-amber-600'  }
         };
 
         // 변신 상태(null이면 기본 몰랑 블롭)를 실제 클래스와 clip-path로 바꾼다.
@@ -200,7 +212,7 @@
             { prompt: "목에 '두르는' 따뜻한 것", answer: "목도리", options: ["목도리", "모자", "귀마개"] },
             { prompt: "머리에 '폭' 써요!", answer: "모자", options: ["모자", "양말", "바지"] },
             { prompt: "다리에 '입는' 옷", answer: "바지", options: ["바지", "치마", "티셔츠"] },
-            { prompt: "'빙글빙글' 도는 치마", answer: "치마", options: ["치마", "바지", "조끼"] },
+            { prompt: "'빙글빙글' 돌면 예쁘게 퍼지는 옷", answer: "치마", options: ["치마", "바지", "조끼"] },
             { prompt: "손을 '뽀득뽀득' 씻어요!", answer: "비누", options: ["비누", "치약", "샴푸"] },
             { prompt: "이를 '치카치카' 닦아요!", answer: "칫솔", options: ["칫솔", "비누", "수건"] },
             { prompt: "머리를 '감는' 거품", answer: "샴푸", options: ["샴푸", "로션", "치약"] },
@@ -211,7 +223,20 @@
             { prompt: "텔레비전을 보는 곳!", answer: "거실", options: ["거실", "부엌", "화장실"] },
             { prompt: "음식을 '보글보글' 요리해요!", answer: "부엌", options: ["부엌", "안방", "현관"] },
             { prompt: "응가와 쉬를 해요", answer: "화장실", options: ["화장실", "베란다", "거실"] },
-            { prompt: "집에 들어오는 문", answer: "현관", options: ["현관", "창문", "벽"] }
+            { prompt: "집에 들어오는 문", answer: "현관", options: ["현관", "창문", "벽"] },
+            // --- 추가 (문제 다양성) ---
+            { prompt: "'윙~' 시원한 바람이 나와요", answer: "선풍기", options: ["선풍기", "난로", "냉장고"] },
+            { prompt: "'딩동' 누가 왔나 봐요!", answer: "초인종", options: ["초인종", "전화기", "시계"] },
+            { prompt: "'째깍째깍' 시간을 알려줘요", answer: "시계", options: ["시계", "달력", "지도"] },
+            { prompt: "'쓱쓱' 먼지를 쓸어요", answer: "빗자루", options: ["빗자루", "걸레", "주걱"] },
+            { prompt: "'싹둑싹둑' 종이를 자르는 것", answer: "가위", options: ["가위", "자", "지우개"] },
+            { prompt: "'주룩주룩' 하늘에서 내려요", answer: "비", options: ["비", "눈", "해"] },
+            { prompt: "'우르르 쾅쾅' 하늘이 울려요", answer: "천둥", options: ["천둥", "바람", "안개"] },
+            { prompt: "'반짝반짝' 밤하늘에 있어요", answer: "별", options: ["별", "구름", "나무"] },
+            { prompt: "'후~' 불면 씨가 날아가요", answer: "민들레", options: ["민들레", "장미", "해바라기"] },
+            { prompt: "'첨벙첨벙' 물놀이하는 곳", answer: "수영장", options: ["수영장", "놀이터", "도서관"] },
+            { prompt: "'조용조용' 책을 읽는 곳", answer: "도서관", options: ["도서관", "시장", "놀이터"] },
+            { prompt: "'데굴데굴' 굴러가는 둥근 것", answer: "공", options: ["공", "상자", "책"] }
           ],
           level2: [ // 반대말
             { prompt: "아이스크림은 '차갑다'! 반대는?", answer: "뜨겁다", options: ["뜨겁다", "작다", "멀다"] },
@@ -284,7 +309,7 @@
             { prompt: "'바람이' 쌩쌩~", answer: "불어요", options: ["불어요", "멈춰요", "사라져요"] },
             { prompt: "'눈이' 펑펑~", answer: "내려요", options: ["내려요", "올라가요", "그쳐요"] },
             { prompt: "'꽃이' 예쁘게~", answer: "피어요", options: ["져요", "피어요", "죽어요"] },
-            { prompt: "'해가' 아침에~", answer: "떴어요", options: ["졌어요", "떴어요", "숨었어요"] },
+            { prompt: "'해가' 아침에~", answer: "떠요", options: ["떠요", "져요", "숨어요"] },
             { prompt: "'달이' 밤에~", answer: "비쳐요", options: ["비쳐요", "자요", "울어요"] },
             { prompt: "'사과를' 냠냠!", answer: "먹어요", options: ["먹어요", "마셔요", "입어요"] },
             { prompt: "'우유를' 꿀꺽꿀꺽!", answer: "마셔요", options: ["씹어요", "마셔요", "던져요"] },
@@ -294,7 +319,7 @@
             { prompt: "'춤을' 신나게~", answer: "춰요", options: ["춰요", "걸어요", "앉아요"] },
             { prompt: "'책을' 재미있게~", answer: "읽어요", options: ["읽어요", "찢어요", "덮어요"] },
             { prompt: "'옷을' 예쁘게~", answer: "입어요", options: ["벗어요", "입어요", "접어요"] },
-            { prompt: "'신발을' 신고~", answer: "신어요", options: ["신어요", "써요", "껴요"] },
+            { prompt: "'신발끈을' 꽉~", answer: "묶어요", options: ["묶어요", "풀어요", "잘라요"] },
             { prompt: "'모자를' 머리에~", answer: "써요", options: ["써요", "입어요", "신어요"] },
             { prompt: "'양말을' 발에~", answer: "신어요", options: ["신어요", "걸어요", "입어요"] },
             { prompt: "'장갑을' 손에~", answer: "껴요", options: ["껴요", "신어요", "입어요"] },
@@ -304,32 +329,45 @@
             { prompt: "'이빨을' 치카치카~", answer: "닦아요", options: ["닦아요", "씻어요", "빨아요"] },
             { prompt: "'손을' 깨끗이~", answer: "씻어요", options: ["씻어요", "만져요", "때려요"] },
             { prompt: "'친구와' 사이좋게~", answer: "놀아요", options: ["놀아요", "싸워요", "밀어요"] },
-            { prompt: "'엄마를' 사랑~", answer: "해요", options: ["해요", "미워해요", "싫어해요"] },
-            { prompt: "'전화를' 여보세요?", answer: "받아요", options: ["받아요", "걸어요", "끊어요"] },
+            { prompt: "'엄마를' 두 팔로 꼭~", answer: "안아요", options: ["안아요", "밀어요", "때려요"] },
+            { prompt: "'전화를' 여보세요?", answer: "받아요", options: ["받아요", "끊어요", "던져요"] },
             { prompt: "'버스를' 정류장에서~", answer: "타요", options: ["타요", "밀어요", "봐요"] },
-            { prompt: "'숙제를' 열심히~", answer: "해요", options: ["해요", "놀아요", "자요"] },
-            { prompt: "'청소를' 깨끗하게~", answer: "해요", options: ["해요", "어질러요", "버려요"] },
+            { prompt: "'숙제를' 공책에 쓱쓱~", answer: "풀어요", options: ["풀어요", "접어요", "버려요"] },
+            { prompt: "'방을' 깨끗하게~", answer: "치워요", options: ["치워요", "어질러요", "더럽혀요"] },
             // 추가된 문제들
-            { prompt: "'우산을' 활짝~", answer: "펴요", options: ["펴요", "접어요", "써요"] },
+            { prompt: "'우산을' 활짝~", answer: "펴요", options: ["펴요", "접어요", "부숴요"] },
             { prompt: "'가방을' 등에~", answer: "메요", options: ["메요", "들어요", "입어요"] },
             { prompt: "'문을' 똑똑~", answer: "두드려요", options: ["두드려요", "열어요", "닫아요"] },
             { prompt: "'창문을' 활짝~", answer: "열어요", options: ["열어요", "닫아요", "깨요"] },
             { prompt: "'불을' 환하게~", answer: "켜요", options: ["켜요", "꺼요", "봐요"] },
             { prompt: "'텔레비전을' 재미있게~", answer: "봐요", options: ["봐요", "들어요", "먹어요"] },
             { prompt: "'피아노를' 딩동댕~", answer: "쳐요", options: ["쳐요", "불어요", "타요"] },
-            { prompt: "'북을' 둥둥둥~", answer: "쳐요", options: ["쳐요", "불어요", "밀어요"] },
-            { prompt: "'풍선을' 후~", answer: "불어요", options: ["불어요", "터뜨려요", "날려요"] },
+            { prompt: "'탬버린을' 찰찰찰~", answer: "흔들어요", options: ["흔들어요", "먹어요", "접어요"] },
+            { prompt: "'촛불을' 후~", answer: "꺼요", options: ["꺼요", "켜요", "먹어요"] },
             { prompt: "'종이비행기를' 슈웅~", answer: "날려요", options: ["날려요", "접어요", "찢어요"] },
             { prompt: "'색종이를' 예쁘게~", answer: "접어요", options: ["접어요", "구겨요", "버려요"] },
             { prompt: "'가위로' 싹둑싹둑~", answer: "잘라요", options: ["잘라요", "붙여요", "그려요"] },
             { prompt: "'풀로' 꾹꾹~", answer: "붙여요", options: ["붙여요", "떼요", "발라요"] },
-            { prompt: "'연필로' 글씨를~", answer: "써요", options: ["써요", "지워요", "읽어요"] },
+            { prompt: "'색연필로' 색을~", answer: "칠해요", options: ["칠해요", "지워요", "찢어요"] },
             { prompt: "'지우개로' 쓱싹쓱싹~", answer: "지워요", options: ["지워요", "써요", "그려요"] },
-            { prompt: "'물건을' 시장에서~", answer: "사요", options: ["사요", "팔아요", "주워요"] },
+            { prompt: "'물건을' 돈을 내고~", answer: "사요", options: ["사요", "팔아요", "주워요"] },
             { prompt: "'돈을' 저금통에~", answer: "넣어요", options: ["넣어요", "꺼내요", "버려요"] },
             { prompt: "'쓰레기를' 휴지통에~", answer: "버려요", options: ["버려요", "주워요", "모아요"] },
             { prompt: "'장난감을' 상자에~", answer: "담아요", options: ["담아요", "쏟아요", "던져요"] },
-            { prompt: "'이불을' 반듯하게~", answer: "개요", options: ["개요", "펴요", "덮어요"] }
+            { prompt: "'이불을' 네모나게 접어서~", answer: "개요", options: ["개요", "덮어요", "깔아요"] },
+            // --- 추가 (문제 다양성) ---
+            { prompt: "'강아지 털을' 부드럽게~", answer: "쓰다듬어요", options: ["쓰다듬어요", "잡아당겨요", "밟아요"] },
+            { prompt: "'꽃에' 물을 조로록~", answer: "줘요", options: ["줘요", "먹어요", "버려요"] },
+            { prompt: "'나무를' 흙에 쑥~", answer: "심어요", options: ["심어요", "뽑아요", "꺾어요"] },
+            { prompt: "'계단을' 조심조심~", answer: "올라가요", options: ["올라가요", "굴러요", "누워요"] },
+            { prompt: "'미끄럼틀을' 쭈욱~", answer: "내려가요", options: ["내려가요", "멈춰요", "앉아요"] },
+            { prompt: "'훌라후프를' 빙글빙글~", answer: "돌려요", options: ["돌려요", "먹어요", "접어요"] },
+            { prompt: "'블록을' 높이높이~", answer: "쌓아요", options: ["쌓아요", "무너뜨려요", "던져요"] },
+            { prompt: "'퍼즐을' 딸깍딸깍~", answer: "맞춰요", options: ["맞춰요", "부숴요", "숨겨요"] },
+            { prompt: "'친구 손을' 꼭~", answer: "잡아요", options: ["잡아요", "놓아요", "때려요"] },
+            { prompt: "'이야기를' 귀 기울여~", answer: "들어요", options: ["들어요", "말해요", "봐요"] },
+            { prompt: "'밥을' 꼭꼭 씹어서~", answer: "삼켜요", options: ["삼켜요", "뱉어요", "흘려요"] },
+            { prompt: "'단추를' 하나씩~", answer: "채워요", options: ["채워요", "뜯어요", "먹어요"] }
           ]
         };
 
@@ -365,10 +403,23 @@
                 { prompt: "세모난 '수박' 조각", answer: "🍉", options: ["🍉", "🍊", "🍋"] },
                 { prompt: "동그란 '사과'", answer: "🍎", options: ["🍎", "🍌", "🍇"] },
                 { prompt: "길쭉한 '바나나'", answer: "🍌", options: ["🍌", "🍎", "🍊"] },
-                { prompt: "바다 친구들 중 '별' 모양은?", answer: "⭐", options: ["⭐", "🐟", "🐙"] },
+                { prompt: "'보라색 문어'는 어디있을까?", answer: "🐙", options: ["🐙", "⭐", "🐟"] },
                 { prompt: "동그란 '풍선'을 찾아줘", answer: "🎈", options: ["🎈", "🎀", "🎁"] },
                 { prompt: "네모난 '선물상자'", answer: "🎁", options: ["🎁", "🎈", "🎉"] },
-                { prompt: "동그란 '축구공'", answer: "⚽", options: ["⚽", "🏈", "🏸"] }
+                { prompt: "동그란 '축구공'", answer: "⚽", options: ["⚽", "🏈", "🏸"] },
+                // --- 추가 (문제 다양성) ---
+                { prompt: "'초록색 동그라미'는?", answer: "🟢", options: ["🟢", "🔵", "🟡"] },
+                { prompt: "'보라색 네모'는?", answer: "🟪", options: ["🟪", "🟦", "🟥"] },
+                { prompt: "'갈색 네모'는?", answer: "🟫", options: ["🟫", "🟧", "⬛"] },
+                { prompt: "'빨간색 하트'를 찾아줘!", answer: "❤️", options: ["❤️", "💙", "💛"] },
+                { prompt: "'노란색 하트'는 어디있을까?", answer: "💛", options: ["💛", "💚", "❤️"] },
+                { prompt: "'파란색 하트'를 줘!", answer: "💙", options: ["💙", "💜", "🧡"] },
+                { prompt: "'초록색 하트'는?", answer: "💚", options: ["💚", "💛", "💙"] },
+                { prompt: "'주황색 하트'는?", answer: "🧡", options: ["🧡", "❤️", "💜"] },
+                { prompt: "'세모난' 피자 조각은?", answer: "🍕", options: ["🍕", "🍩", "🍫"] },
+                { prompt: "'동그란' 도넛은?", answer: "🍩", options: ["🍩", "🍕", "🍫"] },
+                { prompt: "'네모난' 초콜릿은?", answer: "🍫", options: ["🍫", "🍩", "🍕"] },
+                { prompt: "'분홍색 리본'은?", answer: "🎀", options: ["🎀", "🎁", "🎈"] }
             ],
             level2: [ // 기초 패턴 (2~3개 반복) - 빈칸 위치 다양화
                 { prompt: "빨강-노랑-빨강-[?]", answer: "🟡", options: ["🟡", "🔴", "🔵"] },
@@ -401,7 +452,23 @@
                 { prompt: "큰거-작은거-[?]-작은거", answer: "큰거", options: ["큰거", "작은거", "긴거"] },
                 { prompt: "긴거-짧은거-[?]-짧은거", answer: "긴거", options: ["긴거", "짧은거", "굵은거"] },
                 { prompt: "😊-😡-😊-[?]", answer: "😡", options: ["😡", "😊", "😭"] },
-                { prompt: "👍-👎-[?]-👎", answer: "👍", options: ["👍", "👎", "👊"] }
+                { prompt: "👍-👎-[?]-👎", answer: "👍", options: ["👍", "👎", "👊"] },
+                // --- 추가 (문제 다양성) ---
+                { prompt: "🍓-🍋-🍓-[?]", answer: "🍋", options: ["🍋", "🍓", "🍇"] },
+                { prompt: "⬆️-⬇️-⬆️-[?]", answer: "⬇️", options: ["⬇️", "⬆️", "➡️"] },
+                { prompt: "🐤-🐤-🐷-[?]-🐤-🐷", answer: "🐤", options: ["🐤", "🐷", "🐮"] },
+                { prompt: "1-1-2-[?]-1-2", answer: "1", options: ["1", "2", "3"] },
+                { prompt: "가-가-나-[?]-가-나", answer: "가", options: ["가", "나", "다"] },
+                { prompt: "🌞-🌜-🌞-[?]", answer: "🌜", options: ["🌜", "🌞", "⭐"] },
+                { prompt: "왼쪽-오른쪽-왼쪽-[?]", answer: "오른쪽", options: ["오른쪽", "왼쪽", "가운데"] },
+                { prompt: "[?]-🟩-🟨-🟩-🟨-🟩", answer: "🟨", options: ["🟨", "🟩", "🟦"] },
+                { prompt: "2-4-[?]-8", answer: "6", options: ["6", "5", "7"] },
+                { prompt: "5-10-[?]-20", answer: "15", options: ["15", "25", "12"] },
+                { prompt: "🐛-🦋-🐛-[?]", answer: "🦋", options: ["🦋", "🐛", "🐝"] },
+                { prompt: "크게-작게-크게-[?]", answer: "작게", options: ["작게", "크게", "길게"] },
+                { prompt: "빨간불-초록불-빨간불-[?]", answer: "초록불", options: ["초록불", "빨간불", "노란불"] },
+                { prompt: "밤-낮-밤-[?]", answer: "낮", options: ["낮", "밤", "새벽"] },
+                { prompt: "열다-닫다-열다-[?]", answer: "닫다", options: ["닫다", "열다", "밀다"] }
             ],
             level3: [ // 심화 패턴 (4개 반복 - 외워야 함) - 빈칸 위치 다양화
                 { prompt: "빨강-주황-노랑-초록-[?]", answer: "🔵", options: ["🔵", "🔴", "🟣"] },
@@ -434,7 +501,23 @@
                 { prompt: "일-이-삼-사-[?]-이-삼-사", answer: "일", options: ["일", "오", "영"] },
                 { prompt: "하나-둘-셋-넷-하나-[?]-셋-넷", answer: "둘", options: ["둘", "다섯", "여섯"] },
                 { prompt: "첫째-둘째-셋째-넷째-[?]-둘째-셋째-넷째", answer: "첫째", options: ["첫째", "다섯째", "막내"] },
-                { prompt: "봄-가을-겨울-여름-[?]-가을-겨울-여름", answer: "봄", options: ["봄", "계절", "하늘"] } // 순서 섞기
+                { prompt: "봄-가을-겨울-여름-[?]-가을-겨울-여름", answer: "봄", options: ["봄", "계절", "하늘"] },
+                // --- 추가 (문제 다양성) ---
+                { prompt: "🍎-🍋-🍇-🍊-🍎-🍋-[?]-🍊", answer: "🍇", options: ["🍇", "🍎", "🍌"] },
+                { prompt: "🐸-🐵-🐼-🐧-🐸-🐵-🐼-[?]", answer: "🐧", options: ["🐧", "🐸", "🐔"] },
+                { prompt: "2-4-6-8-2-4-6-[?]", answer: "8", options: ["8", "2", "10"] },
+                { prompt: "가-다-마-바-가-다-[?]-바", answer: "마", options: ["마", "나", "라"] },
+                { prompt: "⬆️-➡️-⬇️-⬅️-⬆️-➡️-[?]-⬅️", answer: "⬇️", options: ["⬇️", "⬆️", "➡️"] },
+                { prompt: "🟥-🟦-🟨-🟩-🟥-🟦-[?]-🟩", answer: "🟨", options: ["🟨", "🟧", "🟪"] },
+                { prompt: "봄-여름-가을-겨울-봄-[?]-가을-겨울", answer: "여름", options: ["여름", "봄", "겨울"] },
+                { prompt: "일-일-이-이-일-일-[?]-이", answer: "이", options: ["이", "일", "삼"] },
+                { prompt: "😀-😀-😢-😢-😀-😀-[?]-😢", answer: "😢", options: ["😢", "😀", "😡"] },
+                { prompt: "🌸-🌻-🍁-❄️-🌸-🌻-[?]-❄️", answer: "🍁", options: ["🍁", "🌸", "🌷"] },
+                { prompt: "1-2-2-3-1-2-2-[?]", answer: "3", options: ["3", "1", "2"] },
+                { prompt: "⚫-⚪-⚫-⚫-⚫-⚪-⚫-[?]", answer: "⚫", options: ["⚫", "⚪", "🔴"] },
+                { prompt: "월-화-수-목-월-화-[?]-목", answer: "수", options: ["수", "금", "일"] },
+                { prompt: "도-레-미-파-도-레-[?]-파", answer: "미", options: ["미", "솔", "시"] },
+                { prompt: "🥕-🍅-🥦-🌽-🥕-🍅-[?]-🌽", answer: "🥦", options: ["🥦", "🥕", "🍆"] } // 순서 섞기
             ]
         };
 
@@ -443,38 +526,30 @@
         // 끝자리 2·4·5·9 = 이·사·오·구 는 받침이 없고, 나머지는 받침이 있다.
         const eunNeun = (n) => ([2, 4, 5, 9].includes(n % 10) ? '는' : '은');
 
-        // 1-B. 뇸뇸이 (수학) 문제 생성기 - 로직 수정
-        const generateMathQuestion = (level) => {
-            let a, b, answer, prompt, op;
-            
+        // 1-B. 뇸뇸이 (수학) 문제 생성기
+        // 각 레벨에서 만들 수 있는 (a, b) 조합을 전부 나열한다. 레벨마다 45개뿐인데
+        // 예전에는 매번 독립적으로 무작위 추출해서, 20문제 묶음 안에 같은 문제가
+        // 평균 4.9개, 최대 7번까지 겹쳐 나왔다 ("4 - 4"가 계속 나오던 원인).
+        const mathPairs = (level) => {
+            const pairs = [];
             if (level === 1) {
-                // 1) 레벨 1: 한자리 - 한자리 = 한자리 (0 빼기 제외)
-                a = Math.floor(Math.random() * 9) + 1; 
-                b = Math.floor(Math.random() * a) + 1; 
-                answer = a - b;
-                prompt = `${a} 빼기 ${b}${eunNeun(b)}?`;
-                op = "-";
+                // 한자리 - 한자리 (b <= a 라서 결과도 한자리)
+                for (let a = 1; a <= 9; a++) for (let b = 1; b <= a; b++) pairs.push([a, b]);
             } else if (level === 2) {
-                // 2) 레벨 2: 한자리 + 한자리 = 두자리 (합이 10 이상)
-                do {
-                    a = Math.floor(Math.random() * 9) + 1; // 1~9
-                    b = Math.floor(Math.random() * 9) + 1; // 1~9
-                } while (a + b < 10);
-                
-                answer = a + b;
-                prompt = `${a} 더하기 ${b}${eunNeun(b)}?`;
-                op = "+";
+                // 한자리 + 한자리, 합이 10 이상 (두자리 만들기)
+                for (let a = 1; a <= 9; a++) for (let b = 1; b <= 9; b++) if (a + b >= 10) pairs.push([a, b]);
             } else {
-                // 3) 레벨 3: 두자리 - 한자리 = 한자리 (결과가 10 미만)
-                do {
-                    a = Math.floor(Math.random() * 9) + 10; // 10~18 
-                    b = Math.floor(Math.random() * 9) + 1;  // 1~9
-                } while (a - b >= 10 || a - b < 0);
-
-                answer = a - b;
-                prompt = `${a} 빼기 ${b}${eunNeun(b)}?`;
-                op = "-";
+                // 두자리 - 한자리, 결과가 한자리
+                for (let a = 10; a <= 18; a++) for (let b = 1; b <= 9; b++) if (a - b >= 0 && a - b < 10) pairs.push([a, b]);
             }
+            return pairs;
+        };
+
+        const generateMathQuestion = (level, a, b) => {
+            const isPlus = level === 2;
+            const answer = isPlus ? a + b : a - b;
+            const op = isPlus ? "+" : "-";
+            const prompt = `${a} ${isPlus ? '더하기' : '빼기'} ${b}${eunNeun(b)}?`;
 
             let options = new Set([answer]);
             let attempts = 0;
@@ -500,8 +575,23 @@
             };
         };
 
+        // 정답이 0인 문제("5 빼기 5")는 한 묶음에 최대 이만큼만. 예전에는 b가 a에
+        // 의존해서 뽑히는 바람에 레벨 1의 31%가 "n - n = 0"이었다.
+        const ZERO_ANSWER_LIMIT = 2;
+
         const generateMathPool = (level, count = 20) => {
-            return Array(count).fill(null).map((_, i) => ({ id: `${level}-${i}`, ...generateMathQuestion(level) }));
+            const picked = [];
+            let zeros = 0;
+            // 조합 전체를 섞어 앞에서부터 담으므로 한 묶음 안에 같은 문제가 없다.
+            for (const [a, b] of shuffleArray(mathPairs(level))) {
+                if (picked.length >= count) break;
+                if (level !== 2 && a - b === 0) {
+                    if (zeros >= ZERO_ANSWER_LIMIT) continue;
+                    zeros++;
+                }
+                picked.push([a, b]);
+            }
+            return picked.map(([a, b], i) => ({ id: `${level}-${i}`, ...generateMathQuestion(level, a, b) }));
         };
 
 
@@ -781,17 +871,18 @@
 
           const changePath = (newPath) => setAudioPath(newPath);
 
+          // 한 레벨분 문제 묶음을 새로 뽑는다.
+          const freshPool = (char, lv) => {
+            if (char === 'nyom') return generateMathPool(lv, POOL_SIZE);
+            const src = char === 'nyam' ? WORD_DATA : JEOP_DATA;
+            return shuffleArray(src[`level${lv}`]).slice(0, POOL_SIZE).map(shuffleOptions);
+          };
+
           // 레벨별 문제 묶음을 { 1: [...], 2: [...], 3: [...] } 형태로 만든다.
           // 시작 레벨과 무관하게 세 레벨을 모두 준비해두고, 화면에는 현재 레벨 것만 쓴다.
-          const prepareGameData = (char) => {
-            const pick = (list) => shuffleArray(list).slice(0, POOL_SIZE).map(shuffleOptions);
-            if (char === 'nyam') {
-                return { 1: pick(WORD_DATA.level1), 2: pick(WORD_DATA.level2), 3: pick(WORD_DATA.level3) };
-            } else if (char === 'jeop') {
-                return { 1: pick(JEOP_DATA.level1), 2: pick(JEOP_DATA.level2), 3: pick(JEOP_DATA.level3) };
-            }
-            return { 1: generateMathPool(1, POOL_SIZE), 2: generateMathPool(2, POOL_SIZE), 3: generateMathPool(3, POOL_SIZE) };
-          };
+          const prepareGameData = (char) => ({
+            1: freshPool(char, 1), 2: freshPool(char, 2), 3: freshPool(char, 3)
+          });
 
           const speakWord = useCallback((text) => {
             if ('speechSynthesis' in window) {
@@ -1028,12 +1119,18 @@
           };
 
           const nextQuestion = () => {
-            // 문제 묶음 끝에 닿으면 처음으로 돌아간다.
-            // 예전에는 여기서 아무것도 하지 않아 monsterState가 'happy'에 멈춘 채
+            // 예전에는 묶음 끝에서 아무것도 하지 않아 monsterState가 'happy'에 멈춘 채
             // 보기 버튼이 영영 비활성으로 남았다 (= 게임이 멈추는 증상).
             const poolSize = currentPool.length;
             if (!poolSize) return;
-            setCurrentIdx((prev) => (prev + 1) % poolSize);
+            if (currentIdx + 1 >= poolSize) {
+              // 묶음을 다 썼으면 같은 레벨에서 새로 뽑아 섞는다.
+              // 그냥 0으로 되돌리면 똑같은 문제가 똑같은 순서로 다시 나온다.
+              setQuestionPools((prev) => ({ ...prev, [level]: freshPool(selectedChar, level) }));
+              setCurrentIdx(0);
+            } else {
+              setCurrentIdx(currentIdx + 1);
+            }
             setMonsterState('idle');
           };
 
