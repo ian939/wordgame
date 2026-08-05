@@ -91,6 +91,9 @@
         // 클리어에 필요한 수보다 넉넉히 뽑아둔다 (다 쓰면 처음으로 돌아가며 순환).
         const POOL_SIZE = QUESTIONS_PER_LEVEL * 2;
         const DEFAULT_JEOP_SHAPE = 'rounded-[30%_70%_70%_30%_/_30%_30%_70%_70%]';
+        // 같은 문제를 이만큼 틀리면 정답을 알려주고 다음 문제로 넘어간다.
+        // 모르는 문제 하나에 갇혀서 게임이 멈춘 것처럼 보이는 걸 막는다.
+        const MAX_WRONG_TRIES = 3;
 
         // 쩝쩝이 변신용. clip-path는 반드시 % 단위여야 몬스터 크기에 맞춰 늘어난다.
         // (예전 하트는 24px짜리 SVG path()를 그대로 써서 손톱만 하게 잘려 나왔다)
@@ -630,6 +633,8 @@
           const [monsterState, setMonsterState] = useState('idle');
           const [swallowedWord, setSwallowedWord] = useState('');
           const [wrongWord, setWrongWord] = useState(null);
+          // 현재 문제에서 몇 번 틀렸는지 (MAX_WRONG_TRIES에 닿으면 정답 공개)
+          const [wrongTries, setWrongTries] = useState(0);
 
           // [추가] 쩝쩝이 변신용 모양 상태
           // null = 기본 몰랑 블롭, 아니면 { shape, bg }
@@ -658,8 +663,9 @@
           };
           useEffect(() => clearTimers, []);
 
-          const showNotice = (emoji, text, ms = 2400) => {
-            setNotice({ emoji, text });
+          // tone: 'bad' = 배탈 같은 실패 알림(빨강), 'hint' = 정답 알려주기(파랑)
+          const showNotice = (emoji, text, ms = 2400, tone = 'bad') => {
+            setNotice({ emoji, text, tone });
             later(() => setNotice(null), ms);
           };
 
@@ -804,6 +810,7 @@
               setMonsterState('idle');
               setSwallowedWord('');
               setWrongWord(null);
+              setWrongTries(0);
               setGameState('playing');
               // 레벨 초기화는 아님, 해당 레벨 경험치만 초기화
               // alert()는 화면을 막아버리는 데다 글 못 읽는 아이에겐 의미가 없어서
@@ -822,6 +829,7 @@
               setMonsterState('idle');
               setSwallowedWord('');
               setWrongWord(null);
+              setWrongTries(0);
               setCollectedWords([]);
               setDigestBubbles([]);
               setTimeLeft(30);
@@ -843,6 +851,7 @@
               setMonsterState('idle');
               setSwallowedWord('');
               setWrongWord(null);
+              setWrongTries(0);
               // 메뉴 화면에는 clip-path 인라인 스타일이 붙지 않으므로, 변신한 모양을
               // 그대로 들고 나가면 쩝쩝이가 밋밋한 네모로 보인다. 기본 모양으로 되돌린다.
               setJeopShape(null);
@@ -999,6 +1008,7 @@
             if (selectedOption === currentData.answer) {
               setMonsterState('eating');
               setSwallowedWord(selectedOption);
+              setWrongTries(0);
               playSound('eat');
               
               // 아래 예약 콜백에서 쓰려면 지금 만든 배열을 그대로 넘겨야 한다.
@@ -1033,11 +1043,32 @@
             } else {
               setMonsterState('sad');
               setWrongWord(selectedOption);
-              setExp(prev => (prev > 0 ? prev - 1 : 0));
-              later(() => {
-                setMonsterState('idle');
-                setWrongWord(null);
-              }, 800);
+
+              // 오답 감점을 없앴다. 예전에는 틀릴 때마다 exp가 -1이었는데,
+              // 한 문제를 맞히기까지 평균 2번 틀리므로 순 -1이 되어 경험치가
+              // 오히려 줄었다. 첫 시도 정답률 40%면 한 레벨에 811탭, 30%면
+              // 8500탭이 필요해서 사실상 진행이 멈춘 것처럼 보였다.
+              const tries = wrongTries + 1;
+              setWrongTries(tries);
+
+              if (tries >= MAX_WRONG_TRIES) {
+                // 같은 문제에 계속 갇히지 않도록 정답을 알려주고 넘어간다.
+                // (경험치는 주지 않는다)
+                const shownAnswer = currentData.answer;
+                later(() => {
+                  setMonsterState('idle');
+                  setWrongWord(null);
+                  setWrongTries(0);
+                  showNotice('💡', `정답은 "${shownAnswer}"예요!`, 2200, 'hint');
+                  speakWord(`정답은 ${shownAnswer}. 다음 문제 해볼까요?`);
+                  nextQuestion();
+                }, 900);
+              } else {
+                later(() => {
+                  setMonsterState('idle');
+                  setWrongWord(null);
+                }, 800);
+              }
             }
           };
 
@@ -1110,6 +1141,7 @@
               setTimeLeft(30);
               setMonsterState('idle');
               setWrongWord(null);
+              setWrongTries(0);
               setSwallowedWord('');
               // 새 레벨은 자기 문제 묶음의 첫 문제부터 시작한다.
               setCurrentIdx(0);
@@ -1132,6 +1164,7 @@
               setCurrentIdx(currentIdx + 1);
             }
             setMonsterState('idle');
+            setWrongTries(0); // 새 문제니까 시도 횟수도 초기화
           };
 
           // 음악/디버그 버튼. 놀이 화면에서는 헤더 안에 같이 넣고, 나머지 화면에서는
@@ -1401,9 +1434,9 @@
 
               {notice && (
                 <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none px-6">
-                  <div className="bg-white/95 backdrop-blur-sm border-4 border-red-200 rounded-3xl px-8 py-6 shadow-2xl text-center animate-bounce">
+                  <div className={`bg-white/95 backdrop-blur-sm border-4 rounded-3xl px-8 py-6 shadow-2xl text-center animate-bounce ${notice.tone === 'hint' ? 'border-sky-200' : 'border-red-200'}`}>
                     <div className="text-6xl md:text-7xl mb-3">{notice.emoji}</div>
-                    <p className="text-xl md:text-3xl font-extrabold text-red-500 whitespace-pre-line break-keep">{notice.text}</p>
+                    <p className={`text-xl md:text-3xl font-extrabold whitespace-pre-line break-keep ${notice.tone === 'hint' ? 'text-sky-600' : 'text-red-500'}`}>{notice.text}</p>
                   </div>
                 </div>
               )}
